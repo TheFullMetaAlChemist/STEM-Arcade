@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Atom Builder Game</title>
+  <style>
+    /* ----------------- General Styles ----------------- */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      color: #000;
+    }
+    .centered {
+      text-align: center;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1em;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    /* ----------------- Introduction Screens ----------------- */
+    #introContainer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #111;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 1000;
+    }
+    .introScreen {
+      max-width: 800px;
+      padding: 20px;
+      margin: 0 20px;
+    }
+    .introScreen h2 {
+      margin-top: 0;
+    }
+    .introScreen p, .introScreen ol {
+      font-size: 1.1em;
+      line-height: 1.5;
+    }
+    /* ----------------- Final Screen ----------------- */
+    #finalScreen {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #111;
+      color: #fff;
+      z-index: 1000;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    /* ----------------- Sidebar ----------------- */
+    #sidebar {
+      width: 250px;
+      background: #f0f0f0;
+      padding: 10px;
+      border-right: 1px solid #ccc;
+      float: left;
+      box-sizing: border-box;
+      height: 100vh;
+    }
+    .element-box {
+      width: 100%;
+      border: 2px solid #000;
+      background: #fff;
+      padding: 10px;
+      box-sizing: border-box;
+      text-align: center;
+      margin-top: 20px;
+    }
+    .mass-number {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .element-info {
+      font-size: 2em;
+      font-weight: bold;
+    }
+    .atomic-number {
+      font-size: 0.8em;
+      margin-top: 10px;
+    }
+    #progressIndicator, #bombIndicator {
+      margin-top: 20px;
+      font-size: 1em;
+      text-align: center;
+      font-weight: bold;
+    }
+    /* ----------------- Atom Builder ----------------- */
+    #atomBuilder {
+      margin-left: 260px;
+      padding: 10px;
+      display: none; /* Hidden until after the intro */
+    }
+    #atomBuilder .section {
+      margin-bottom: 20px;
+    }
+    #atomContainer {
+      position: relative;
+      width: 400px;
+      height: 400px;
+      margin: 0 auto;
+      background: #fafafa;
+      border: 1px solid #ccc;
+      border-radius: 50%;
+    }
+    /* Nucleus with inputs */
+    #nucleus {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background: #fff;
+      border: 2px solid #000;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      box-sizing: border-box;
+      padding-top: 10px;
+      z-index: 2;
+      text-align: center;
+    }
+    #nucleus .input-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    #nucleus .input-row span {
+      font-size: 1.2em;
+      margin-right: 5px;
+    }
+    #nucleus input {
+      width: 40px;
+      text-align: center;
+      font-size: 1em;
+    }
+    /* Electron shells */
+    .shell {
+      position: absolute;
+      border: 2px dashed #aaa;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+    }
+    #shell1 {
+      width: 150px;
+      height: 150px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    #shell2 {
+      width: 250px;
+      height: 250px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    #shell3 {
+      width: 350px;
+      height: 350px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    #shell4 {
+      width: 400px;
+      height: 400px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    /* Electron spots */
+    .electron-spot {
+      position: absolute;
+      width: 25px;
+      height: 25px;
+      border: 1px solid #000;
+      border-radius: 50%;
+      background: #eee;
+      text-align: center;
+      line-height: 25px;
+      font-weight: bold;
+      cursor: pointer;
+      pointer-events: auto;
+      z-index: 3;
+    }
+    #shell1 .spot-top {
+      top: 0;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    #shell1 .spot-bottom {
+      bottom: 0;
+      left: 50%;
+      transform: translate(-50%, 50%);
+    }
+    .shell.two .spot-top-left {
+      top: 0;
+      left: 35%;
+      transform: translate(-50%, -50%);
+    }
+    .shell.two .spot-top-right {
+      top: 0;
+      left: 65%;
+      transform: translate(-50%, -50%);
+    }
+    .shell.two .spot-bottom-left {
+      bottom: 0;
+      left: 35%;
+      transform: translate(-50%, 50%);
+    }
+    .shell.two .spot-bottom-right {
+      bottom: 0;
+      left: 65%;
+      transform: translate(-50%, 50%);
+    }
+    .shell.two .spot-left-top {
+      left: 0;
+      top: 35%;
+      transform: translate(-50%, -50%);
+    }
+    .shell.two .spot-left-bottom {
+      left: 0;
+      top: 65%;
+      transform: translate(-50%, -50%);
+    }
+    .shell.two .spot-right-top {
+      right: 0;
+      top: 35%;
+      transform: translate(50%, -50%);
+    }
+    .shell.two .spot-right-bottom {
+      right: 0;
+      top: 65%;
+      transform: translate(50%, -50%);
+    }
+    #shell4 .spot-top {
+      top: 0;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    #shell4 .spot-bottom {
+      bottom: 0;
+      left: 50%;
+      transform: translate(-50%, 50%);
+    }
+    #submitBtn {
+      padding: 10px 20px;
+      font-size: 1em;
+      display: block;
+      margin: 10px auto;
+    }
+    #score {
+      font-size: 1.2em;
+      font-weight: bold;
+      text-align: center;
+    }
+    /* ----------------- Electron Clash Mini-Game ----------------- */
+    #electronClash {
+      display: none;
+      padding: 10px;
+      text-align: center;
+      background: linear-gradient(135deg, #000046, #1CB5E0);
+      color: #fff;
+      height: 100vh;
+      box-sizing: border-box;
+    }
+    #clashCanvas {
+      background: radial-gradient(circle at center, #000, #222);
+      display: block;
+      margin: 20px auto;
+      border: 2px solid #00ffff;
+    }
+    #clashScore {
+      font-size: 1.2em;
+      margin-bottom: 10px;
+      color: #ff9900;
+    }
+    /* ----------------- Final Screen ----------------- */
+    #finalScreen {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #111;
+      color: #fff;
+      z-index: 1000;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    /* ----------------- Key ----------------- */
+    #key {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(240,240,240,0.9);
+      padding: 5px 10px;
+      border: 1px solid #ccc;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <!-- Introduction Screens Container -->
+  <div id="introContainer">
+    <!-- Intro Screen 1: The Story -->
+    <div id="introScreen1" class="introScreen">
+      <h2>🚀 The Alien Invasion Has Begun!</h2>
+      <p>
+        The galaxy is under attack! Ruthless alien invaders are descending upon Earth, and only one weapon can stop them—<strong>the power of the atom!</strong>
+      </p>
+      <p>
+        As Earth's last line of defense, you must <strong>construct atoms</strong> to create the bombs needed to fight back. Every atom you build correctly arms you with a bomb to use against the alien fleet.
+      </p>
+      <p>
+        The fate of the planet is in your hands. Are you ready to harness the building blocks of the universe and <strong>save humanity?</strong>
+      </p>
+      <p>
+        <strong>💥 Build atoms. Arm the defenses. Fight for survival! 💥</strong>
+      </p>
+      <button id="nextBtn">Next</button>
+    </div>
+    <!-- Intro Screen 2: How to Play -->
+    <div id="introScreen2" class="introScreen" style="display: none;">
+      <h2>🛠️ How to Build Atoms & Arm the Defenses</h2>
+      <ol style="text-align: left; max-width: 600px; margin: 0 auto; font-size: 1.1em;">
+        <li>
+          <strong>Build an Atom</strong><br>
+          - Type the number of <strong>protons</strong> and <strong>neutrons</strong> inside the nucleus.<br>
+          &nbsp;&nbsp;&nbsp;Example: <code>p: 6 n: 6</code> for Carbon.<br>
+          - Click on the <strong>electron shells</strong> to toggle electrons.
+        </li>
+        <li style="margin-top: 10px;">
+          <strong>Check Your Atom</strong><br>
+          - Click <strong>Submit</strong> when you think your atom is correct.<br>
+          - If correct, you'll receive <strong>a bomb</strong> to use in battle!
+        </li>
+        <li style="margin-top: 10px;">
+          <strong>Defend Earth!</strong><br>
+          - Every 5 successful atoms unlocks <strong>60 seconds of Space Invaders</strong>.<br>
+          - Use the bombs you've earned (press the <strong>b</strong> key) to blast alien ships.
+        </li>
+      </ol>
+      <p style="margin-top: 20px; font-size: 1.1em;">
+        💡 <strong>Tip:</strong> The periodic table holds the secrets—use it wisely!
+      </p>
+      <button id="startBtn">Start</button>
+    </div>
+  </div>
+
+  <!-- Final Screen -->
+  <div id="finalScreen" class="centered">
+    <h2>Game Over!</h2>
+    <p id="finalScoreText"></p>
+    <button id="restartBtn">Restart Game</button>
+  </div>
+
+  <!-- Sidebar with Element Info -->
+  <div id="sidebar">
+    <h2>Element</h2>
+    <div id="elementBox" class="element-box">
+      <div class="mass-number" id="massNumber"></div>
+      <div class="element-info" id="elementSymbol"></div>
+      <div class="atomic-number" id="atomicNumber"></div>
+    </div>
+    <div id="progressIndicator">Solved: 0 / 20</div>
+    <div id="bombIndicator">Bombs: 0</div>
+  </div>
+
+  <!-- Atom Builder Module -->
+  <div id="atomBuilder">
+    <h1>Atom Builder</h1>
+    <div id="gameArea">
+      <div class="section">
+        <h2>Build the Atom</h2>
+        <div id="atomContainer">
+          <!-- Electron shells -->
+          <div id="shell1" class="shell">
+            <div class="electron-spot spot-top" data-shell="1"></div>
+            <div class="electron-spot spot-bottom" data-shell="1"></div>
+          </div>
+          <div id="shell2" class="shell two">
+            <div class="electron-spot spot-top-left" data-shell="2"></div>
+            <div class="electron-spot spot-top-right" data-shell="2"></div>
+            <div class="electron-spot spot-bottom-left" data-shell="2"></div>
+            <div class="electron-spot spot-bottom-right" data-shell="2"></div>
+            <div class="electron-spot spot-left-top" data-shell="2"></div>
+            <div class="electron-spot spot-left-bottom" data-shell="2"></div>
+            <div class="electron-spot spot-right-top" data-shell="2"></div>
+            <div class="electron-spot spot-right-bottom" data-shell="2"></div>
+          </div>
+          <div id="shell3" class="shell two">
+            <div class="electron-spot spot-top-left" data-shell="3"></div>
+            <div class="electron-spot spot-top-right" data-shell="3"></div>
+            <div class="electron-spot spot-bottom-left" data-shell="3"></div>
+            <div class="electron-spot spot-bottom-right" data-shell="3"></div>
+            <div class="electron-spot spot-left-top" data-shell="3"></div>
+            <div class="electron-spot spot-left-bottom" data-shell="3"></div>
+            <div class="electron-spot spot-right-top" data-shell="3"></div>
+            <div class="electron-spot spot-right-bottom" data-shell="3"></div>
+          </div>
+          <div id="shell4" class="shell">
+            <div class="electron-spot spot-top" data-shell="4"></div>
+            <div class="electron-spot spot-bottom" data-shell="4"></div>
+          </div>
+          <!-- Nucleus with inputs -->
+          <div id="nucleus">
+            <div class="input-row">
+              <span>p</span>
+              <input type="number" id="inputProtons" min="0">
+            </div>
+            <div class="input-row">
+              <span>n</span>
+              <input type="number" id="inputNeutrons" min="0">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="section">
+        <button id="submitBtn">Submit Atom</button>
+        <p id="score"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Electron Clash Mini-Game Module -->
+  <div id="electronClash">
+    <h1>Electron Clash</h1>
+    <canvas id="clashCanvas" width="500" height="400"></canvas>
+    <div id="clashScore">Score: 0</div>
+    <button id="exitClashBtn">Return to Atom Builder</button>
+  </div>
+
+  <!-- Key -->
+  <div id="key">
+    Key: p = proton, n = neutron, e⁻ = electron, b = bomb shot
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      /***************** INTRODUCTION SCREENS *****************/
+      const introContainer = document.getElementById("introContainer");
+      const introScreen1 = document.getElementById("introScreen1");
+      const introScreen2 = document.getElementById("introScreen2");
+      const nextBtn = document.getElementById("nextBtn");
+      const startBtn = document.getElementById("startBtn");
+
+      nextBtn.addEventListener("click", function() {
+        introScreen1.style.display = "none";
+        introScreen2.style.display = "block";
+      });
+
+      startBtn.addEventListener("click", function() {
+        introContainer.style.display = "none";
+        document.getElementById("atomBuilder").style.display = "block";
+      });
+
+      /***************** FINAL SCREEN *****************/
+      const finalScreen = document.getElementById("finalScreen");
+      const finalScoreText = document.getElementById("finalScoreText");
+      const restartBtn = document.getElementById("restartBtn");
+      if(restartBtn){
+        restartBtn.addEventListener("click", function() {
+          // Reset game state.
+          availableElements = allElements.slice();
+          atomScore = 0;
+          attemptCount = 0;
+          solvedCount = 0;
+          bombs = 0;
+          clashScoreTotal = 0;
+          updateProgress();
+          finalScreen.style.display = "none";
+          document.getElementById("atomBuilder").style.display = "block";
+          newAtomRound();
+        });
+      }
+
+      /***************** ATOM BUILDER CODE *****************/
+      const allElements = [
+        { name: "Hydrogen", symbol: "H", protons: 1, neutrons: 0 },
+        { name: "Helium", symbol: "He", protons: 2, neutrons: 2 },
+        { name: "Lithium", symbol: "Li", protons: 3, neutrons: 4 },
+        { name: "Beryllium", symbol: "Be", protons: 4, neutrons: 5 },
+        { name: "Boron", symbol: "B", protons: 5, neutrons: 6 },
+        { name: "Carbon", symbol: "C", protons: 6, neutrons: 6 },
+        { name: "Nitrogen", symbol: "N", protons: 7, neutrons: 7 },
+        { name: "Oxygen", symbol: "O", protons: 8, neutrons: 8 },
+        { name: "Fluorine", symbol: "F", protons: 9, neutrons: 10 },
+        { name: "Neon", symbol: "Ne", protons: 10, neutrons: 10 },
+        { name: "Sodium", symbol: "Na", protons: 11, neutrons: 12 },
+        { name: "Magnesium", symbol: "Mg", protons: 12, neutrons: 12 },
+        { name: "Aluminium", symbol: "Al", protons: 13, neutrons: 14 },
+        { name: "Silicon", symbol: "Si", protons: 14, neutrons: 14 },
+        { name: "Phosphorus", symbol: "P", protons: 15, neutrons: 16 },
+        { name: "Sulfur", symbol: "S", protons: 16, neutrons: 16 },
+        { name: "Chlorine", symbol: "Cl", protons: 17, neutrons: 18 },
+        { name: "Argon", symbol: "Ar", protons: 18, neutrons: 18 },
+        { name: "Potassium", symbol: "K", protons: 19, neutrons: 20 },
+        { name: "Calcium", symbol: "Ca", protons: 20, neutrons: 20 }
+      ];
+
+      let availableElements = allElements.slice();
+      let currentElement;
+      let atomScore = 0;
+      let attemptCount = 0;
+      let solvedCount = 0;
+      let bombs = 0;
+
+      function getRandomElement() {
+        if (availableElements.length === 0) return null;
+        const index = Math.floor(Math.random() * availableElements.length);
+        return { element: availableElements[index], index };
+      }
+
+      function updateSidebar(element) {
+        const massNumber = element.protons + element.neutrons;
+        document.getElementById('massNumber').innerText = massNumber;
+        document.getElementById('elementSymbol').innerText = element.symbol;
+        document.getElementById('atomicNumber').innerText = element.protons;
+      }
+
+      function updateProgress() {
+        document.getElementById('progressIndicator').innerText =
+          `Solved: ${solvedCount} / ${allElements.length}`;
+        document.getElementById('bombIndicator').innerText =
+          `Bombs: ${bombs}`;
+      }
+
+      function getRequiredElectrons(atomicNumber) {
+        let electrons = atomicNumber;
+        const shell1 = Math.min(2, electrons);
+        electrons -= shell1;
+        const shell2 = Math.min(8, electrons);
+        electrons -= shell2;
+        const shell3 = Math.min(8, electrons);
+        electrons -= shell3;
+        const shell4 = electrons;
+        return { shell1, shell2, shell3, shell4 };
+      }
+
+      function newAtomRound() {
+        document.getElementById('inputProtons').value = "";
+        document.getElementById('inputNeutrons').value = "";
+        document.querySelectorAll('.electron-spot').forEach(spot => spot.innerHTML = "");
+
+        const randomPick = getRandomElement();
+        if (!randomPick) {
+          // All elements solved! Show final screen.
+          document.getElementById("atomBuilder").style.display = "none";
+          finalScoreText.innerText = `Your overall score is ${atomScore} points. You solved ${solvedCount} atoms and achieved a total Electron Clash score of ${clashScoreTotal} points!`;
+          finalScreen.style.display = "flex";
+          return;
+        }
+        currentElement = randomPick.element;
+        updateSidebar(currentElement);
+        updateProgress();
+        document.getElementById('score').innerText = "";
+      }
+
+      function toggleElectron() {
+        if (this.innerHTML.trim() === "") {
+          this.innerHTML = "e⁻";
+        } else {
+          this.innerHTML = "";
+        }
+      }
+      document.querySelectorAll('.electron-spot').forEach(spot => {
+        spot.addEventListener("click", toggleElectron);
+      });
+
+      document.getElementById('submitBtn').addEventListener("click", function() {
+        const inputProtons = parseInt(document.getElementById('inputProtons').value, 10);
+        const inputNeutrons = parseInt(document.getElementById('inputNeutrons').value, 10);
+        let nucleusCorrect = (inputProtons === currentElement.protons && inputNeutrons === currentElement.neutrons);
+
+        const electronCount = { shell1: 0, shell2: 0, shell3: 0, shell4: 0 };
+        document.querySelectorAll('.electron-spot').forEach(spot => {
+          const shell = spot.getAttribute("data-shell");
+          if (spot.innerHTML.trim() !== "") electronCount["shell" + shell]++;
+        });
+        const req = getRequiredElectrons(currentElement.protons);
+        let electronsCorrect = (electronCount.shell1 === req.shell1) &&
+                               (electronCount.shell2 === req.shell2) &&
+                               (electronCount.shell3 === req.shell3) &&
+                               (electronCount.shell4 === req.shell4);
+
+        let roundScore = 0;
+        if(nucleusCorrect) roundScore++;
+        if(electronsCorrect) roundScore++;
+
+        attemptCount++;
+        if(roundScore === 2) {
+          atomScore++;
+          solvedCount++;
+          bombs++;  // Award one bomb.
+          const indexToRemove = availableElements.findIndex(el => el.symbol === currentElement.symbol);
+          if(indexToRemove !== -1) availableElements.splice(indexToRemove, 1);
+          alert("Correct! Moving on to the next element. You received a bomb!");
+        } else {
+          alert("Incorrect assembly. Try again.");
+        }
+        document.getElementById('score').innerText = "Score: " + atomScore;
+        updateProgress();
+
+        // Launch mini-game every 5 attempts.
+        if(attemptCount % 5 === 0) {
+          launchElectronClash();
+        } else {
+          newAtomRound();
+        }
+      });
+
+      newAtomRound();
+
+      /***************** ELECTRON CLASH MINI-GAME CODE *****************/
+      const electronClashDiv = document.getElementById("electronClash");
+      const atomBuilderDiv = document.getElementById("atomBuilder");
+      const canvas = document.getElementById("clashCanvas");
+      const ctx = canvas.getContext("2d");
+      let clashScore = 0;
+      let clashScoreTotal = 0;
+      let clashGameRunning = false;
+      let miniGameStartTime = 0;
+      const miniGameTimeLimit = 60; // seconds
+
+      const shooter = {
+        x: canvas.width / 2 - 15,
+        y: canvas.height - 50,
+        width: 30,
+        height: 30,
+        speed: 5,
+        cooldown: 0,
+        attack: 1
+      };
+      const bulletCooldown = 20;
+      const bombCooldown = 20;
+      let currentBombCooldown = 0;
+
+      let bullets = [];
+      let bombBullets = [];
+
+      const formation = {
+        rows: 4,
+        cols: 8,
+        enemyWidth: 30,
+        enemyHeight: 30,
+        spacingX: 10,
+        spacingY: 10,
+        x: 50,
+        y: 20,
+        dx: 1,
+        dy: 10,
+        direction: 1,
+        enemies: []
+      };
+
+      function createEnemyFormation() {
+        formation.enemies = [];
+        for (let r = 0; r < formation.rows; r++) {
+          for (let c = 0; c < formation.cols; c++) {
+            const enemy = {
+              x: formation.x + c * (formation.enemyWidth + formation.spacingX),
+              y: formation.y + r * (formation.enemyHeight + formation.spacingY),
+              width: formation.enemyWidth,
+              height: formation.enemyHeight,
+              hp: 1
+            };
+            formation.enemies.push(enemy);
+          }
+        }
+      }
+
+      const keys = {};
+      window.addEventListener("keydown", (e) => { keys[e.key] = true; });
+      window.addEventListener("keyup", (e) => { keys[e.key] = false; });
+
+      function clashGameLoop() {
+        if(!clashGameRunning) return;
+
+        let elapsed = (Date.now() - miniGameStartTime) / 1000;
+        if(elapsed >= miniGameTimeLimit) {
+          endElectronClash(true);
+          return;
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        grad.addColorStop(0, "#000046");
+        grad.addColorStop(1, "#1CB5E0");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        if(keys["ArrowLeft"] && shooter.x > 0) {
+          shooter.x -= shooter.speed;
+        }
+        if(keys["ArrowRight"] && shooter.x + shooter.width < canvas.width) {
+          shooter.x += shooter.speed;
+        }
+        if(keys[" "] && shooter.cooldown <= 0) {
+          bullets.push({ x: shooter.x + shooter.width/2 - 2, y: shooter.y, width: 4, height: 10, damage: shooter.attack, type: "bullet" });
+          shooter.cooldown = bulletCooldown;
+        }
+        if(keys["b"] && currentBombCooldown <= 0 && bombBullets.length === 0 && bombs > 0) {
+          bombBullets.push({ x: shooter.x + shooter.width/2 - 4, y: shooter.y, width: 8, height: 12, damage: shooter.attack, type: "bomb" });
+          currentBombCooldown = bombCooldown;
+          bombs--;
+          updateProgress();
+        }
+        if(shooter.cooldown > 0) shooter.cooldown--;
+        if(currentBombCooldown > 0) currentBombCooldown--;
+
+        ctx.save();
+        ctx.shadowColor = "#00ffff";
+        ctx.shadowBlur = 20;
+        ctx.fillStyle = "#00ff00";
+        ctx.fillRect(shooter.x, shooter.y, shooter.width, shooter.height);
+        ctx.restore();
+
+        for(let i = bullets.length - 1; i >= 0; i--) {
+          let b = bullets[i];
+          b.y -= 7;
+          ctx.fillStyle = "#ffff00";
+          ctx.fillRect(b.x, b.y, b.width, b.height);
+          if(b.y + b.height < 0) bullets.splice(i, 1);
+        }
+        for(let i = bombBullets.length - 1; i >= 0; i--) {
+          let b = bombBullets[i];
+          b.y -= 5;
+          ctx.fillStyle = "#ff6600";
+          ctx.fillRect(b.x, b.y, b.width, b.height);
+          if(b.y + b.height < 0) bombBullets.splice(i, 1);
+        }
+
+        let minX = Infinity, maxX = -Infinity;
+        formation.enemies.forEach(enemy => {
+          if(enemy.x < minX) minX = enemy.x;
+          if(enemy.x + enemy.width > maxX) maxX = enemy.x + enemy.width;
+        });
+        if(minX <= 0 || maxX >= canvas.width) {
+          formation.direction *= -1;
+          formation.enemies.forEach(enemy => {
+            enemy.y += formation.dy;
+          });
+        }
+        formation.enemies.forEach(enemy => {
+          enemy.x += formation.dx * formation.direction;
+        });
+
+        let bombExplosionHappened = false;
+        let explosionCenterX = 0;
+        let explosionCenterY = 0;
+
+        outerLoop:
+        for(let i = formation.enemies.length - 1; i >= 0; i--) {
+          let enemy = formation.enemies[i];
+          ctx.save();
+          ctx.shadowColor = "#ff00ff";
+          ctx.shadowBlur = 15;
+          ctx.fillStyle = "#ff0099";
+          ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+          ctx.restore();
+
+          for(let j = bullets.length - 1; j >= 0; j--) {
+            let b = bullets[j];
+            if(b.x < enemy.x + enemy.width &&
+               b.x + b.width > enemy.x &&
+               b.y < enemy.y + enemy.height &&
+               b.y + b.height > enemy.y) {
+              enemy.hp -= b.damage;
+              bullets.splice(j, 1);
+              if(enemy.hp <= 0) {
+                clashScore += 10;
+                formation.enemies.splice(i, 1);
+                continue outerLoop;
+              }
+            }
+          }
+          for(let j = bombBullets.length - 1; j >= 0; j--) {
+            let b = bombBullets[j];
+            if(b.x < enemy.x + enemy.width &&
+               b.x + b.width > enemy.x &&
+               b.y < enemy.y + enemy.height &&
+               b.y + b.height > enemy.y) {
+              explosionCenterX = enemy.x + enemy.width / 2;
+              explosionCenterY = enemy.y + enemy.height / 2;
+              bombExplosionHappened = true;
+              bombBullets.splice(j, 1);
+              clashScore += 30;
+              break outerLoop;
+            }
+          }
+          if(enemy.y + enemy.height >= canvas.height - 20) {
+            endElectronClash(false);
+            return;
+          }
+        }
+
+        if(bombExplosionHappened) {
+          formation.enemies = formation.enemies.filter(en => {
+            let enCenterX = en.x + en.width/2;
+            let enCenterY = en.y + en.height/2;
+            let dx = enCenterX - explosionCenterX;
+            let dy = enCenterY - explosionCenterY;
+            return Math.sqrt(dx*dx + dy*dy) > 60;
+          });
+        }
+
+        if(formation.enemies.length === 0) {
+          createEnemyFormation();
+        }
+
+        document.getElementById("clashScore").innerText =
+          "Score: " + clashScore + " | Time: " + Math.floor(elapsed) + "s";
+        requestAnimationFrame(clashGameLoop);
+      }
+
+      function launchElectronClash() {
+        atomBuilderDiv.style.display = "none";
+        electronClashDiv.style.display = "block";
+        clashScore = 0;
+        bullets = [];
+        bombBullets = [];
+        shooter.x = canvas.width / 2 - 15;
+        shooter.cooldown = 0;
+        shooter.speed = 5;
+        shooter.attack = 1;
+        currentBombCooldown = 0;
+        formation.direction = 1;
+        formation.dx = 1;
+        formation.rows = 4;
+        createEnemyFormation();
+        miniGameStartTime = Date.now();
+        clashGameRunning = true;
+        requestAnimationFrame(clashGameLoop);
+      }
+
+      function endElectronClash(win) {
+        clashGameRunning = false;
+        if(win) {
+          alert("Congratulations! You survived 60 seconds. Your clash score: " + clashScore);
+        } else {
+          alert("Electron Clash Over! An enemy reached the bottom. Your clash score: " + clashScore);
+        }
+        clashScoreTotal += clashScore;
+        electronClashDiv.style.display = "none";
+        atomBuilderDiv.style.display = "block";
+        newAtomRound();
+      }
+
+      document.getElementById("exitClashBtn").addEventListener("click", function() {
+        endElectronClash(false);
+      });
+
+      // Removed duplicate declaration of clashScoreTotal here.
+    });
+  </script>
+</body>
+</html>

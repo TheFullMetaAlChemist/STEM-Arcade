@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Atomic Duel - Versus The Antag-Chemist</title>
+  <style>
+    /* Global Styles */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f2f5;
+    }
+    header {
+      background: #2c3e50;
+      color: #ecf0f1;
+      padding: 20px;
+      text-align: center;
+      font-size: 32px;
+      font-weight: bold;
+      position: relative;
+    }
+    /* Container Layout */
+    #container {
+      display: flex;
+      max-width: 1200px;
+      margin: 20px auto;
+    }
+    #gameArea {
+      flex: 2;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-right: 20px;
+      min-height: 400px;
+    }
+    #sidebar {
+      flex: 1;
+      background: #ecf0f1;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .section {
+      margin-bottom: 20px;
+    }
+    /* Card Styling */
+    .card {
+      width: 80px;
+      height: 120px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      display: inline-block;
+      margin: 5px;
+      vertical-align: top;
+      padding: 5px;
+      background: #fff;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .card:hover {
+      transform: scale(1.05);
+    }
+    .card .mass, .card .symbol, .card .atomic {
+      text-align: center;
+    }
+    .card .mass {
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .card .symbol {
+      font-size: 28px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    .card .atomic {
+      font-size: 14px;
+    }
+    /* Section Titles */
+    #antagSection h2 {
+      color: #e74c3c;
+    }
+    #playerSection h2 {
+      color: #2980b9;
+    }
+    /* Buttons */
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background: #2980b9;
+      color: #fff;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #3498db;
+    }
+    #passButton {
+      background: #f39c12;
+    }
+    #passButton:hover {
+      background: #e67e22;
+    }
+    #nextRoundButton {
+      background: #27ae60;
+    }
+    #nextRoundButton:hover {
+      background: #2ecc71;
+    }
+    /* Sidebar */
+    #scoreDisplay {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    #scoreDisplay h3 {
+      margin: 0 0 10px;
+    }
+    #scoreDisplay p {
+      font-size: 24px;
+      margin: 0;
+    }
+    #logSection h3 {
+      margin-bottom: 10px;
+    }
+    #log {
+      background: #fff;
+      border: 1px solid #bdc3c7;
+      border-radius: 5px;
+      padding: 10px;
+      height: 200px;
+      overflow-y: auto;
+      font-size: 14px;
+      color: #2c3e50;
+    }
+    /* Antag‑Chemist Image in Header */
+    #antagImg {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 80px;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    Atomic Duel - Versus The Antag-Chemist
+    <img id="antagImg" src="antag_neutral.png" alt="Antag-Chemist">
+  </header>
+  <div id="container">
+    <!-- Game Area -->
+    <div id="gameArea">
+      <div id="instructions" class="section">
+        <p>
+          Welcome to Atomic Duel!<br>
+          Rules: Each round, The Antag‑Chemist plays a card and a condition is set (e.g., "play a card with MORE/LESS PROTONS").<br>
+          Click on a card from your hand to play it. If your card meets the condition, you gain +1 point; if not, you lose 1 point.<br>
+          If you pass when you have a card that could win the turn, you lose 1 point.<br>
+          If you cannot play a card that meets the condition, you may pass (with no penalty). However, passes do not count as a turn—you must eventually play a card.<br>
+          When you pass, The Antag‑Chemist's card changes (and the condition remains the same) until you eventually play a card.<br>
+          You need at least 3 points in each round (5 played cards per round) to pass. There are 4 rounds. Good luck!
+        </p>
+        <button id="startGameButton">Start Game</button>
+      </div>
+      <div id="scoreBoard" class="section" style="display:none;">
+        Round: <span id="roundNumber"></span> | Turn: <span id="turnNumber"></span> | Round Score: <span id="roundScore"></span>
+      </div>
+      <div id="antagSection" class="section" style="display:none;">
+        <h2>The Antag‑Chemist's Card</h2>
+        <div id="antagCard"></div>
+      </div>
+      <div id="conditionSection" class="section" style="display:none;">
+        <h2 id="conditionText"></h2>
+      </div>
+      <div id="playerSection" class="section" style="display:none;">
+        <h2>Your Hand</h2>
+        <div id="playerHand"></div>
+        <button id="passButton">Pass</button>
+      </div>
+      <div id="nextRoundSection" class="section" style="display:none;">
+        <button id="nextRoundButton">Next Round</button>
+      </div>
+    </div>
+    <!-- Sidebar -->
+    <div id="sidebar">
+      <div id="scoreDisplay" class="section">
+        <h3>Running Total</h3>
+        <p id="runningTotal">0</p>
+      </div>
+      <div id="logSection" class="section">
+        <h3>Turn Log</h3>
+        <div id="log"></div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // The 50-element deck.
+    const ELEMENT_DECK = [
+      {symbol: "H", atomic_number: 1, mass_number: 1},
+      {symbol: "He", atomic_number: 2, mass_number: 4},
+      {symbol: "Li", atomic_number: 3, mass_number: 7},
+      {symbol: "Be", atomic_number: 4, mass_number: 9},
+      {symbol: "B", atomic_number: 5, mass_number: 11},
+      {symbol: "C", atomic_number: 6, mass_number: 12},
+      {symbol: "N", atomic_number: 7, mass_number: 14},
+      {symbol: "O", atomic_number: 8, mass_number: 16},
+      {symbol: "F", atomic_number: 9, mass_number: 19},
+      {symbol: "Ne", atomic_number: 10, mass_number: 20},
+      {symbol: "Na", atomic_number: 11, mass_number: 23},
+      {symbol: "Mg", atomic_number: 12, mass_number: 24},
+      {symbol: "Al", atomic_number: 13, mass_number: 27},
+      {symbol: "Si", atomic_number: 14, mass_number: 28},
+      {symbol: "P", atomic_number: 15, mass_number: 31},
+      {symbol: "S", atomic_number: 16, mass_number: 32},
+      {symbol: "Cl", atomic_number: 17, mass_number: 35},
+      {symbol: "Ar", atomic_number: 18, mass_number: 40},
+      {symbol: "K", atomic_number: 19, mass_number: 39},
+      {symbol: "Ca", atomic_number: 20, mass_number: 40},
+      {symbol: "Sc", atomic_number: 21, mass_number: 45},
+      {symbol: "Ti", atomic_number: 22, mass_number: 48},
+      {symbol: "V", atomic_number: 23, mass_number: 51},
+      {symbol: "Cr", atomic_number: 24, mass_number: 52},
+      {symbol: "Mn", atomic_number: 25, mass_number: 55},
+      {symbol: "Fe", atomic_number: 26, mass_number: 56},
+      {symbol: "Co", atomic_number: 27, mass_number: 59},
+      {symbol: "Ni", atomic_number: 28, mass_number: 59},
+      {symbol: "Cu", atomic_number: 29, mass_number: 64},
+      {symbol: "Zn", atomic_number: 30, mass_number: 65},
+      {symbol: "Ga", atomic_number: 31, mass_number: 70},
+      {symbol: "Ge", atomic_number: 32, mass_number: 73},
+      {symbol: "As", atomic_number: 33, mass_number: 75},
+      {symbol: "Se", atomic_number: 34, mass_number: 79},
+      {symbol: "Br", atomic_number: 35, mass_number: 80},
+      {symbol: "Kr", atomic_number: 36, mass_number: 84},
+      {symbol: "Rb", atomic_number: 37, mass_number: 85},
+      {symbol: "Sr", atomic_number: 38, mass_number: 88},
+      {symbol: "Y", atomic_number: 39, mass_number: 89},
+      {symbol: "Zr", atomic_number: 40, mass_number: 91},
+      {symbol: "Rh", atomic_number: 45, mass_number: 103},
+      {symbol: "Pd", atomic_number: 46, mass_number: 106},
+      {symbol: "Ag", atomic_number: 47, mass_number: 108},
+      {symbol: "Cd", atomic_number: 48, mass_number: 112},
+      {symbol: "In", atomic_number: 49, mass_number: 115},
+      {symbol: "Sn", atomic_number: 50, mass_number: 119},
+      {symbol: "I", atomic_number: 53, mass_number: 127},
+      {symbol: "Pt", atomic_number: 78, mass_number: 195},
+      {symbol: "Au", atomic_number: 79, mass_number: 197},
+      {symbol: "Hg", atomic_number: 80, mass_number: 201}
+    ];
+    
+    // Helper functions.
+    function getProtons(card) { return card.atomic_number; }
+    function getElectrons(card) { return card.atomic_number; }
+    function getNeutrons(card) { return card.mass_number - card.atomic_number; }
+    
+    // Global game state variables.
+    let roundNumber = 1;
+    let turnNumber = 0;
+    let roundScore = 0;
+    let totalScore = 0;
+    // antagCards will be used for the pre-dealt cards in a round.
+    let antagCards = [];
+    let playerCards = [];
+    let currentAntag;
+    let currentProperty = "";
+    let currentCondition = "";
+    
+    // Utility: Shuffle an array.
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+    
+    // Render a card element.
+    function renderCard(card) {
+      const cardDiv = document.createElement("div");
+      cardDiv.className = "card";
+      const massDiv = document.createElement("div");
+      massDiv.className = "mass";
+      massDiv.textContent = card.mass_number;
+      const symbolDiv = document.createElement("div");
+      symbolDiv.className = "symbol";
+      symbolDiv.textContent = card.symbol;
+      const atomicDiv = document.createElement("div");
+      atomicDiv.className = "atomic";
+      atomicDiv.textContent = card.atomic_number;
+      cardDiv.appendChild(massDiv);
+      cardDiv.appendChild(symbolDiv);
+      cardDiv.appendChild(atomicDiv);
+      return cardDiv;
+    }
+    
+    // Render multiple cards into a container.
+    function renderCards(container, cards, clickable = false) {
+      container.innerHTML = "";
+      cards.forEach((card, index) => {
+        const cardElem = renderCard(card);
+        if (clickable) {
+          cardElem.addEventListener("click", () => chooseCard(index));
+        }
+        container.appendChild(cardElem);
+      });
+    }
+    
+    // Update the scoreboard and running total.
+    function updateScoreBoard() {
+      document.getElementById("roundNumber").textContent = roundNumber;
+      document.getElementById("turnNumber").textContent = turnNumber + 1;
+      document.getElementById("roundScore").textContent = roundScore;
+      document.getElementById("runningTotal").textContent = totalScore;
+    }
+    
+    // Append a message to the turn log.
+    function addLog(message, color) {
+      const logDiv = document.getElementById("log");
+      const msgP = document.createElement("p");
+      msgP.style.color = color;
+      msgP.textContent = message;
+      logDiv.appendChild(msgP);
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+    
+    // Check if any card in the player's hand can win the current turn.
+    function canWinTurn() {
+      return playerCards.some(card => {
+        let value, antagValue;
+        if (currentProperty === "protons") {
+          value = getProtons(card);
+          antagValue = getProtons(currentAntag);
+        } else if (currentProperty === "electrons") {
+          value = getElectrons(card);
+          antagValue = getElectrons(currentAntag);
+        } else { // neutrons
+          value = getNeutrons(card);
+          antagValue = getNeutrons(currentAntag);
+        }
+        return currentCondition === "more" ? (value > antagValue) : (value < antagValue);
+      });
+    }
+    
+    // Update the display of The Antag‑Chemist's card.
+    function updateAntagDisplay() {
+      const antagContainer = document.getElementById("antagCard");
+      antagContainer.innerHTML = "";
+      antagContainer.appendChild(renderCard(currentAntag));
+    }
+    
+    // Start a new round: shuffle deck and deal cards.
+    function startRound() {
+      turnNumber = 0;
+      roundScore = 0;
+      let deck = shuffle(ELEMENT_DECK.slice());
+      // Deal 5 cards for The Antag‑Chemist for this round.
+      antagCards = deck.slice(0, 5);
+      // Deal 5 cards to the player.
+      playerCards = deck.slice(5, 10);
+      updateScoreBoard();
+      document.getElementById("log").innerHTML = "";
+      document.getElementById("nextRoundSection").style.display = "none";
+      document.getElementById("antagSection").style.display = "block";
+      document.getElementById("conditionSection").style.display = "block";
+      document.getElementById("playerSection").style.display = "block";
+      // Reset the Antag‑Chemist image to neutral.
+      document.getElementById("antagImg").src = "antag_neutral.png";
+      // Set the current Antag‑Chemist card as the first card.
+      currentAntag = antagCards[turnNumber];
+      startTurn();
+    }
+    
+    // Start a new turn.
+    function startTurn() {
+      // If the player has played 5 cards, end the round.
+      if (turnNumber >= 5) {
+        if (roundScore >= 3) {
+          addLog(`Round ${roundNumber} complete. You passed with ${roundScore} points.`, "green");
+          totalScore += roundScore;
+          updateScoreBoard();
+          if (roundNumber === 4) {
+            victoryScreen();
+            return;
+          } else {
+            document.getElementById("nextRoundSection").style.display = "block";
+          }
+        } else {
+          addLog(`Round ${roundNumber} complete. You failed with ${roundScore} points.`, "red");
+          defeatScreen();
+          return;
+        }
+        return;
+      }
+      // For every new turn (whether after a played card or a pass), update the current Antag‑Chemist card.
+      if (turnNumber < antagCards.length) {
+        currentAntag = antagCards[turnNumber];
+      } else {
+        // If no pre-dealt card is available, pick a random card.
+        currentAntag = ELEMENT_DECK[Math.floor(Math.random() * ELEMENT_DECK.length)];
+      }
+      
+      // Determine the property for this turn.
+      if (roundNumber === 1) {
+        currentProperty = "protons";
+      } else if (roundNumber === 2) {
+        currentProperty = "electrons";
+      } else if (roundNumber === 3) {
+        currentProperty = "neutrons";
+      } else {
+        const props = ["protons", "electrons", "neutrons"];
+        currentProperty = props[Math.floor(Math.random() * props.length)];
+      }
+      // Choose the condition.
+      currentCondition = Math.random() < 0.5 ? "more" : "less";
+      
+      // Update the condition prompt.
+      document.getElementById("conditionText").textContent =
+        `Play a card with ${currentCondition.toUpperCase()} ${currentProperty.toUpperCase()} than The Antag‑Chemist's card.`;
+      
+      // Update The Antag‑Chemist's card display.
+      updateAntagDisplay();
+      
+      // Render the player's hand.
+      renderCards(document.getElementById("playerHand"), playerCards, true);
+      updateScoreBoard();
+    }
+    
+    // Handle a chosen card.
+    function chooseCard(index) {
+      const chosenCard = playerCards[index];
+      let antagVal, playerVal;
+      if (currentProperty === "protons") {
+        antagVal = getProtons(currentAntag);
+        playerVal = getProtons(chosenCard);
+      } else if (currentProperty === "electrons") {
+        antagVal = getElectrons(currentAntag);
+        playerVal = getElectrons(chosenCard);
+      } else {
+        antagVal = getNeutrons(currentAntag);
+        playerVal = getNeutrons(chosenCard);
+      }
+      let correct = currentCondition === "more" ? (playerVal > antagVal) : (playerVal < antagVal);
+      if (correct) {
+        roundScore++;
+        addLog(`Turn ${turnNumber+1}: Correct! You gain 1 point.`, "green");
+        document.getElementById("antagImg").src = "antag_disappointed.png";
+      } else {
+        roundScore--;
+        addLog(`Turn ${turnNumber+1}: Incorrect! You lose 1 point.`, "red");
+        document.getElementById("antagImg").src = "antag_celebrate.png";
+      }
+      // Remove the chosen card from the player's hand.
+      playerCards.splice(index, 1);
+      turnNumber++;
+      updateScoreBoard();
+      // After playing a card, start a new turn (which updates The Antag‑Chemist's card).
+      setTimeout(startTurn, 1000);
+    }
+    
+    // Handle a pass.
+    // When passing, remove the current Antag‑Chemist card and replace it with the next card (or a random card).
+    // The turn does not advance; the player must eventually play a card.
+    function passTurn() {
+      if (canWinTurn()) {
+        roundScore--;
+        addLog(`Turn ${turnNumber+1}: You passed despite having a winning card! You lose 1 point.`, "red");
+        document.getElementById("antagImg").src = "antag_celebrate.png";
+      } else {
+        addLog(`Turn ${turnNumber+1}: You passed. No points gained or lost.`, "orange");
+        document.getElementById("antagImg").src = "antag_neutral.png";
+      }
+      // Remove the current Antag‑Chemist card from the antagCards array (if available).
+      if (antagCards.length > turnNumber) {
+        antagCards.splice(turnNumber, 1);
+      }
+      // Update currentAntag: if there is a next card, use it; otherwise, pick a random card.
+      if (antagCards.length > turnNumber) {
+        currentAntag = antagCards[turnNumber];
+      } else {
+        currentAntag = ELEMENT_DECK[Math.floor(Math.random() * ELEMENT_DECK.length)];
+      }
+      updateScoreBoard();
+      updateAntagDisplay();
+      // The turn does NOT advance; the player must now choose a card.
+    }
+    
+    // Victory screen when the player beats the final round.
+    function victoryScreen() {
+      const gameArea = document.getElementById("gameArea");
+      gameArea.innerHTML = `
+        <div style="text-align: center; padding: 40px;">
+          <h2 style="color: #27ae60;">Congratulations!</h2>
+          <p>You have defeated The Antag‑Chemist and mastered the elements!</p>
+          <button onclick="location.reload()">Play Again</button>
+        </div>
+      `;
+    }
+    
+    // Defeat screen when the player fails a round.
+    function defeatScreen() {
+      const gameArea = document.getElementById("gameArea");
+      gameArea.innerHTML = `
+        <div style="text-align: center; padding: 40px;">
+          <h2 style="color: #e74c3c;">Defeat!</h2>
+          <p>You have been defeated by The Antag‑Chemist. Better luck next time!</p>
+          <button onclick="location.reload()">Play Again</button>
+        </div>
+      `;
+    }
+    
+    // Event listeners.
+    document.getElementById("startGameButton").addEventListener("click", () => {
+      document.getElementById("instructions").style.display = "none";
+      startRound();
+    });
+    document.getElementById("passButton").addEventListener("click", passTurn);
+    document.getElementById("nextRoundButton").addEventListener("click", () => {
+      roundNumber++;
+      startRound();
+    });
+  </script>
+</body>
+</html>
