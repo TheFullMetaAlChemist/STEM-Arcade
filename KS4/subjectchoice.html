@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STEM Arcade - Welcome</title>
+    <title>KS4 Subjects - STEM Arcade</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -27,38 +27,45 @@
         h1 {
             color: #00aaff;
         }
-        p {
-            font-size: 18px;
-        }
-        .button-container {
+        .subjects {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
             margin-top: 20px;
         }
-        .btn {
-            display: inline-block;
-            background-color: #00aaff;
-            color: white;
-            padding: 15px 30px;
-            margin: 10px;
-            border: none;
-            border-radius: 5px;
-            font-size: 18px;
+        .subject {
             cursor: pointer;
-            transition: 0.3s;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s;
         }
-        .btn:hover {
-            background-color: #0088cc;
+        .subject img {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+        .subject:hover {
+            transform: scale(1.05);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Welcome to STEM Arcade</h1>
-        <p>Explore a world of science through interactive games and simulations! Whether you're learning about atoms, forces, climate change, or osmosis, we’ve got something exciting for you.</p>
-        <p>Select your key stage to get started:</p>
-        <div class="button-container">
-            <a href="KS3/subjectchoice.html" class="btn">Key Stage 3</a>
-            <a href="KS4/subjectchoice.html" class="btn">Key Stage 4</a>
-            <a href="KS5/subjectchoice.html" class="btn">Key Stage 5</a>
+        <h1>Select Your KS4 Subject</h1>
+        <p>Click on the subject you are studying to explore interactive games and simulations.</p>
+        <div class="subjects">
+            <div class="subject" onclick="location.href='ks4_biology.html'">
+                <img src="biology-arcade.png" alt="Biology">
+            </div>
+            <div class="subject" onclick="location.href='ks4_chemistry.html'">
+                <img src="chemistry-arcade.png" alt="Chemistry">
+            </div>
+            <div class="subject" onclick="location.href='ks4_physics.html'">
+                <img src="physics-arcade.png" alt="Physics">
+            </div>
+            <div class="subject" onclick="location.href='ks4_maths.html'">
+                <img src="maths-arcade.png" alt="Maths">
+            </div>
         </div>
     </div>
 </body>
