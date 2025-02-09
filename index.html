@@ -6,11 +6,11 @@
     <title>STEM Arcade - Welcome</title>
     <style>
         @font-face {
-            font-family: 'PixelArcade';
-            src: url('pixel_arcade.ttf'); /* Ensure you have a proper pixelated arcade font */
+            font-family: 'PressStart2P';
+            src: url('PressStart2P-Regular.ttf'); /* Ensure this pixelated font file is available */
         }
         body {
-            font-family: 'PixelArcade', Arial, sans-serif;
+            font-family: 'PressStart2P', Arial, sans-serif;
             background-image: url('arcade_background.png');
             background-size: cover;
             background-position: center;
@@ -24,8 +24,8 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
-            width: 25%;
+            transform: translate(-50%, -50%) perspective(500px) rotateX(20deg);
+            width: 18%;
             aspect-ratio: 1/1;
             background: rgba(0, 0, 0, 0.9);
             padding: 15px;
@@ -38,9 +38,9 @@
         }
         h1 {
             color: #00ff00;
-            font-size: 24px;
+            font-size: 18px;
             text-transform: uppercase;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         .button-container {
             display: flex;
@@ -51,17 +51,18 @@
             display: block;
             background-color: #00ff00;
             color: black;
-            padding: 8px 16px;
-            margin: 6px;
+            padding: 6px 12px;
+            margin: 5px;
             border: none;
             border-radius: 3px;
-            font-size: 18px;
+            font-size: 14px;
             cursor: pointer;
             text-transform: uppercase;
             width: 80%;
             text-align: center;
             transition: 0.3s;
-            font-family: 'PixelArcade', Arial, sans-serif;
+            font-family: 'PressStart2P', Arial, sans-serif;
+            text-decoration: none;
         }
         .btn:hover {
             background-color: #008800;
