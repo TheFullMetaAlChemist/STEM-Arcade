@@ -3,14 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STEM Arcade - Welcome</title>
+    <title>KS4 Subjects - STEM Arcade</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-image: url('arcade_background.png');
-            background-size: cover;
+            /* Use your pixel art background, repeated and pixelated */
+            background-image: url('arcade_pixel_background.png');
+            background-repeat: repeat;
             background-position: center;
-            background-attachment: fixed;
+            /* Ensures the pixels remain crisp and not blurred on scaling */
+            image-rendering: pixelated;
+            /* Set a base color in case the image doesn't cover everything */
+            background-color: #000;
+            
             color: #eaeaea;
             text-align: center;
             margin: 0;
@@ -20,6 +25,7 @@
             max-width: 800px;
             margin: 50px auto;
             padding: 20px;
+            /* A semi-transparent dark overlay so the text stands out */
             background: rgba(0, 0, 0, 0.7);
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
@@ -27,38 +33,56 @@
         h1 {
             color: #00aaff;
         }
-        p {
-            font-size: 18px;
-        }
-        .button-container {
+        .subjects {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
             margin-top: 20px;
         }
-        .btn {
-            display: inline-block;
-            background-color: #00aaff;
-            color: white;
-            padding: 15px 30px;
-            margin: 10px;
-            border: none;
-            border-radius: 5px;
-            font-size: 18px;
+        .subject {
             cursor: pointer;
-            transition: 0.3s;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s;
+            text-align: center;
         }
-        .btn:hover {
-            background-color: #0088cc;
+        .subject img {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+        .subject:hover {
+            transform: scale(1.05);
+        }
+        .subject-label {
+            margin-top: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #ffffff;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Welcome to STEM Arcade</h1>
-        <p>Explore a world of science through interactive games and simulations! Whether you're learning about atoms, forces, climate change, or osmosis, we’ve got something exciting for you.</p>
-        <p>Select your key stage to get started:</p>
-        <div class="button-container">
-            <a href="KS3/subjectchoice.html" class="btn">Key Stage 3</a>
-            <a href="KS4/subjectchoice.html" class="btn">Key Stage 4</a>
-            <a href="KS5/subjectchoice.html" class="btn">Key Stage 5</a>
+        <h1>Select Your KS3 Subject</h1>
+        <p>Click on the subject you are studying to explore interactive games and simulations.</p>
+        <div class="subjects">
+            <div class="subject" onclick="location.href='ks4_biology.html'">
+                <img src="biology-arcade.png" alt="Biology">
+                <div class="subject-label">Biology</div>
+            </div>
+            <div class="subject" onclick="location.href='ks4_chemistry.html'">
+                <img src="chemistry-arcade.png" alt="Chemistry">
+                <div class="subject-label">Chemistry</div>
+            </div>
+            <div class="subject" onclick="location.href='ks4_physics.html'">
+                <img src="physics-arcade.png" alt="Physics">
+                <div class="subject-label">Physics</div>
+            </div>
+            <div class="subject" onclick="location.href='ks4_maths.html'">
+                <img src="maths-arcade.png" alt="Maths">
+                <div class="subject-label">Maths</div>
+            </div>
         </div>
     </div>
 </body>
