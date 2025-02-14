@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Scientific Dynamic Equilibrium Simulator &amp; Worksheet</title>
+  <style>
+    /* ---------- Simulation Styles ---------- */
+    /* Reset and Base Styles */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: #1e1e1e;
+      color: #fff;
+      overflow-x: hidden;
+    }
+    /* Simulation Container (full-screen) */
+    #simulationContainer {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background: #2b2b2b;
+      transition: background 0.5s;
+    }
+    /* Canvas always fills container */
+    #simulationCanvas { display: block; width: 100%; height: 100%; }
+    /* Reaction Equation at Bottom Center */
+    #reactionEquation {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 28px;
+      font-weight: bold;
+      background: rgba(0,0,0,0.5);
+      padding: 5px 10px;
+      border-radius: 4px;
+      z-index: 11;
+    }
+    /* Top-Left Controls Overlay (Start/Reset) */
+    #controlsOverlay {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(0,0,0,0.75);
+      padding: 15px;
+      border-radius: 8px;
+      z-index: 10;
+    }
+    #controlsOverlay button {
+      margin: 5px;
+      padding: 8px 12px;
+      background: #007acc;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #fff;
+    }
+    #controlsOverlay button:hover { background: #005a9e; }
+    /* Bottom-Left Fast Forward Overlay */
+    #fastForwardOverlay {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      z-index: 10;
+    }
+    #fastForwardOverlay button {
+      padding: 8px 12px;
+      background: #007acc;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #fff;
+    }
+    #fastForwardOverlay button:hover { background: #005a9e; }
+    /* Top-Center Changing Conditions Overlay */
+    #conditionsOverlay {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 400px;
+      background: rgba(0,0,0,0.75);
+      padding: 15px;
+      border-radius: 8px;
+      z-index: 10;
+      text-align: center;
+    }
+    #conditionsOverlay button,
+    #conditionsOverlay select,
+    #conditionsOverlay input[type="radio"] {
+      margin: 5px;
+      padding: 6px 10px;
+      background: #007acc;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #fff;
+      font-size: 14px;
+    }
+    #conditionsOverlay button:hover,
+    #conditionsOverlay select:hover { background: #005a9e; }
+    #conditionsOverlay label { margin-right: 5px; font-size: 14px; }
+    /* Initially hide conditions content */
+    #conditionsContent { display: none; margin-top: 10px; text-align: left; }
+    /* Reaction type options side by side */
+    .reactionTypes { display: flex; justify-content: space-around; margin-top: 5px; }
+    /* Top-Right Log Overlay */
+    #logOverlay {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 320px;
+      background: rgba(0,0,0,0.75);
+      padding: 15px;
+      border-radius: 8px;
+      z-index: 10;
+      font-size: 14px;
+    }
+    #logOverlay h3 { margin-bottom: 10px; font-size: 16px; }
+    #logOverlay table { width: 100%; border-collapse: collapse; }
+    #logOverlay th, #logOverlay td { border: 1px solid #555; padding: 5px; text-align: center; }
+    /* Product Bank within Log Overlay */
+    #bankTable { margin-top: 10px; }
+    /* Equilibrium Info Overlay (below log) */
+    #equilibriumInfo {
+      margin-top: 10px;
+      background: rgba(0,0,0,0.85);
+      padding: 10px;
+      border-radius: 4px;
+      text-align: center;
+      font-size: 14px;
+    }
+    /* Style for each equilibrium event */
+    .equilibriumEvent {
+      border-top: 1px solid #007acc;
+      padding-top: 10px;
+      margin-top: 10px;
+    }
+    
+    /* ---------- Scenarios Button & Panel ---------- */
+    /* Scenarios Button: now "Scenarios", fixed at bottom-right */
+    #toggleScenariosBtn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 12;
+      padding: 10px 20px;
+      background-color: #28a745;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s ease;
+    }
+    #toggleScenariosBtn:hover { background-color: #218838; }
+    /* Scenarios Panel */
+    #scenariosPanel {
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      background: #fff;
+      color: #333;
+      border: 2px solid #0b3d91;
+      border-radius: 10px;
+      padding: 15px;
+      z-index: 12;
+      display: none;
+      text-align: center;
+    }
+    #scenariosPanel h2 {
+      margin-bottom: 10px;
+      color: #0b3d91;
+    }
+    #scenariosPanel button {
+      margin: 5px;
+      padding: 10px 15px;
+      background-color: #007acc;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #scenariosPanel button:hover { background-color: #005a9e; }
+    
+    /* ---------- Worksheet Sections Styled to Match Simulation ---------- */
+    .worksheetSection {
+      background: #2b2b2b;
+      color: #fff;
+      border: 2px solid #007acc;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 40px auto;
+      max-width: 800px;
+      box-shadow: 0 4px 8px rgba(0, 123, 172, 0.3);
+      display: none;
+    }
+    .worksheetSection h2, .worksheetSection h3 {
+      text-align: center;
+      color: #fff;
+    }
+    .worksheetSection table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    .worksheetSection th, .worksheetSection td {
+      border: 1px solid #007acc;
+      padding: 10px;
+      text-align: center;
+    }
+    .worksheetSection th {
+      background-color: #007acc;
+      color: #fff;
+    }
+    .worksheetSection input[type="text"] {
+      width: 90%;
+      padding: 8px;
+      margin: 5px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1em;
+    }
+    .worksheetSection select {
+      width: auto;
+      min-width: 120px;
+      padding: 5px;
+      margin: 0 3px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1em;
+    }
+    .worksheetSection .gap-fill {
+      margin: 20px 0;
+      font-style: italic;
+      font-size: 1.1em;
+    }
+    .worksheetSection .check-button {
+      display: inline-block;
+      background-color: #007acc;
+      color: #fff;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: background-color 0.3s ease;
+    }
+    .worksheetSection .check-button:hover { background-color: #005a9e; }
+  </style>
+</head>
+<body>
+  <!-- ---------- Simulation Area ---------- -->
+  <div id="simulationContainer">
+    <canvas id="simulationCanvas"></canvas>
+    <!-- Reaction Equation at Bottom -->
+    <div id="reactionEquation">
+      <span style="color: red;">A (g)</span> + 
+      <span style="color: blue;">B (g)</span> → 
+      <span style="color: purple;">C (g)</span>
+    </div>
+    <!-- Top-Left: Start and Reset -->
+    <div id="controlsOverlay">
+      <button id="startBtn">Start</button>
+      <button id="resetBtn">Reset</button>
+    </div>
+    <!-- Bottom-Left: Fast Forward -->
+    <div id="fastForwardOverlay">
+      <button id="toggleFFBtn">Fast Forward: Off</button>
+    </div>
+    <!-- Top-Center: Changing Conditions Overlay -->
+    <div id="conditionsOverlay">
+      <button id="toggleConditionsBtn">Changing Conditions</button>
+      <div id="conditionsContent">
+        <h4>Concentration</h4>
+        <button id="add25RedBtn">Add 25 Red Molecules</button>
+        <button id="removeProductBtn">Remove Product</button>
+        <hr style="border: 1px solid #555;">
+        <h4>Temperature</h4>
+        <div class="reactionTypes">
+          <label>
+            <input type="radio" name="reactionType" value="exothermic" checked> Exothermic
+          </label>
+          <label>
+            <input type="radio" name="reactionType" value="endothermic"> Endothermic
+          </label>
+        </div>
+        <div style="margin-top: 5px;">
+          <label for="tempSelect">Temperature:</label>
+          <select id="tempSelect">
+            <option value="300">Low (300 K)</option>
+            <option value="500">Medium (500 K)</option>
+            <option value="700">High (700 K)</option>
+          </select>
+        </div>
+        <hr style="border: 1px solid #555;">
+        <h4>Pressure</h4>
+        <button id="togglePressureBtn">Low Pressure</button>
+        <hr style="border: 1px solid #555;">
+        <h4>Catalyst</h4>
+        <button id="toggleCatalystBtn">Catalyst: Off</button>
+      </div>
+    </div>
+    <!-- Top-Right Log Overlay -->
+    <div id="logOverlay">
+      <h3>Simulation Log</h3>
+      <table id="logTable">
+        <thead>
+          <tr>
+            <th>Time (s)</th>
+            <th>Red</th>
+            <th>Blue</th>
+            <th>Product</th>
+          </tr>
+        </thead>
+        <tbody id="logTableBody"></tbody>
+      </table>
+      <h3>Product Bank</h3>
+      <table id="bankTable">
+        <thead>
+          <tr>
+            <th>Current Product</th>
+            <th>Total (Banked + Current)</th>
+          </tr>
+        </thead>
+        <tbody id="bankTableBody">
+          <tr><td>0</td><td>0</td></tr>
+        </tbody>
+      </table>
+      <div id="equilibriumInfo"></div>
+    </div>
+    <!-- ---------- Scenarios Button (Bottom-Right) ---------- -->
+    <button id="toggleScenariosBtn" onclick="toggleScenariosPanel()">Scenarios</button>
+  </div>
+
+  <!-- ---------- Scenarios Panel ---------- -->
+  <div id="scenariosPanel">
+    <h2>Select a Scenario</h2>
+    <button onclick="showScenario('part1')">Part 1: Changing Concentration</button>
+    <button onclick="showScenario('part2')">Part 2: Removal of Product</button>
+    <button onclick="showScenario('part3')">Part 3: Changing Pressure</button>
+    <button onclick="showScenario('part4')">Part 4: Temperature (Exothermic)</button>
+    <button onclick="showScenario('part5')">Part 5: Temperature (Endothermic)</button>
+    <button onclick="showScenario('part6')">Part 6: Using a Catalyst</button>
+  </div>
+
+  <!-- ---------- Worksheet Sections (Styled Like Simulation) ---------- -->
+  <!-- Worksheet Section: Part 1 -->
+  <section class="worksheetSection" id="part1">
+    <h2>Part 1: Changing Concentration</h2>
+    <h3>Instructions:</h3>
+    <ol>
+      <li>Set the reaction type to <strong>Exothermic</strong> and the temperature to <strong>Low (300 K)</strong>.</li>
+      <li>Run the simulation until equilibrium is reached and record the equilibrium yield of purple product molecules.</li>
+      <li>Click the <strong>Add 25 Red Molecules</strong> button, allow the system to re-equilibrate, and record the new equilibrium yield.</li>
+      <li>Repeat step 3 one more time and record the yield.</li>
+    </ol>
+    <h3>Data Table:</h3>
+    <table>
+      <tr>
+        <th>Trial</th>
+        <th>Equilibrium Yield (Purple Product Molecules)</th>
+      </tr>
+      <tr>
+        <td>Initial</td>
+        <td><input type="text" placeholder="Enter yield"></td>
+      </tr>
+      <tr>
+        <td>After 25 Red Molecules Added</td>
+        <td><input type="text" placeholder="Enter yield"></td>
+      </tr>
+      <tr>
+        <td>After Another 25 Red Added</td>
+        <td><input type="text" placeholder="Enter yield"></td>
+      </tr>
+    </table>
+    <h3>Gap-Fill Explanation:</h3>
+    <p class="gap-fill">
+      Increasing the concentration of red reactant molecules causes the equilibrium to 
+      <select id="part1_gap1">
+        <option value="">--select--</option>
+        <option value="oppose">oppose</option>
+        <option value="enhance">enhance</option>
+      </select>
+      the increase. This favours the 
+      <select id="part1_gap2">
+        <option value="">--select--</option>
+        <option value="forward">forward</option>
+        <option value="reverse">reverse</option>
+      </select>
+      reaction, 
+      <select id="part1_gap3">
+        <option value="">--select--</option>
+        <option value="reducing">reducing</option>
+        <option value="increasing">increasing</option>
+      </select>
+      the number of red molecules, and resulting in a 
+      <select id="part1_gap4">
+        <option value="">--select--</option>
+        <option value="higher">higher</option>
+        <option value="lower">lower</option>
+      </select>
+      yield of purple product molecules.
+    </p>
+    <button class="check-button" onclick="checkGapFill('part1', ['oppose','forward','reducing','higher'])">Check Gap-Fill</button>
+  </section>
+
+  <!-- Worksheet Section: Part 2 -->
+  <section class="worksheetSection" id="part2">
+    <h2>Part 2: Removal of Product</h2>
+    <h3>Instructions:</h3>
+    <ol>
+      <li>Run the simulation (with the exothermic reaction at low temperature) until equilibrium is reached and record the equilibrium yield of purple product molecules.</li>
+      <li>Click the <strong>Remove Product</strong> button, allow the system to reach a new equilibrium, and record the new equilibrium yield.</li>
+      <li>Repeat the removal of product one more time and record the new yield.</li>
+    </ol>
+    <h3>Data Table:</h3>
+    <table>
+      <tr>
+        <th>Trial</th>
+        <th>Equilibrium Yield (Purple Product Molecules)</th>
+      </tr>
+      <tr>
+        <td>Initial</td>
+        <td><input type="text" placeholder="Enter yield"></td>
+      </tr>
+      <tr>
+        <td>After Removing Product Once</td>
+        <td><input type="text" placeholder="Enter yield"></td>
+      </tr>
+      <tr>
+        <td>After Removing Product Twice</td>
+        <td><input type="text" placeholder="Enter yield"></td>
+      </tr>
+    </table>
+    <h3>Gap-Fill Explanation:</h3>
+    <p class="gap-fill">
+      Removing the purple product molecules causes the equilibrium to shift to 
+      <select id="part2_gap1">
+        <option value="">--select--</option>
+        <option value="replace">replace</option>
+        <option value="oppose">oppose</option>
+      </select>
+      the removal. This favours the 
+      <select id="part2_gap2">
+        <option value="">--select--</option>
+        <option value="forward">forward</option>
+        <option value="reverse">reverse</option>
+      </select>
+      reaction, using up more reactant molecules and forming 
+      <select id="part2_gap3">
+        <option value="">--select--</option>
+        <option value="more">more</option>
+        <option value="less">less</option>
+      </select>
+      purple product molecules until a new equilibrium is reached with a 
+      <select id="part2_gap4">
+        <option value="">--select--</option>
+        <option value="higher">higher</option>
+        <option value="lower">lower</option>
+      </select>
+      total yield of product.
+    </p>
+    <button class="check-button" onclick="checkGapFill('part2', ['replace','forward','more','higher'])">Check Gap-Fill</button>
+  </section>
+
+  <!-- Worksheet Section: Part 3 -->
+  <section class="worksheetSection" id="part3">
+    <h2>Part 3: Changing Pressure</h2>
+    <h3>Instructions:</h3>
+    <ol>
+      <li>Run the simulation with the default <strong>low pressure</strong> setting until equilibrium is reached, and record the equilibrium yield of purple product molecules.</li>
+      <li>Click the <strong>Toggle Pressure</strong> button to switch to <strong>high pressure</strong>, allow the system to reach a new equilibrium, and record the new equilibrium yield.</li>
+    </ol>
+    <h3>Data Table:</h3>
+    <table>
+      <tr>
+        <th>Trial</th>
+        <th>Equilibrium Yield (Purple Product Molecules)</th>
+      </tr>
+      <tr>
+        <td>Low Pressure (Initial)</td>
+        <td><input type="text" placeholder="Enter yield"></td>
+      </tr>
+      <tr>
+        <td>High Pressure</td>
+        <td><input type="text" placeholder="Enter yield"></td>
+      </tr>
+    </table>
+    <h3>Gap-Fill Explanation:</h3>
+    <p class="gap-fill">
+      Increasing the pressure of the system causes the equilibrium to shift to 
+      <select id="part3_gap1">
+        <option value="">--select--</option>
+        <option value="reduce">reduce</option>
+        <option value="increase">increase</option>
+      </select>
+      the pressure. This favours the reaction that produces 
+      <select id="part3_gap2">
+        <option value="">--select--</option>
+        <option value="fewer">fewer</option>
+        <option value="more">more</option>
+      </select>
+      gas molecules, which is the 
+      <select id="part3_gap3">
+        <option value="">--select--</option>
+        <option value="forward">forward</option>
+        <option value="reverse">reverse</option>
+      </select>
+      reaction in this case. As a result, the equilibrium shifts to the 
+      <select id="part3_gap4">
+        <option value="">--select--</option>
+        <option value="right">right</option>
+        <option value="left">left</option>
+      </select>
+      and gives a 
+      <select id="part3_gap5">
+        <option value="">--select--</option>
+        <option value="higher">higher</option>
+        <option value="lower">lower</option>
+      </select>
+      yield of purple product molecules.
+    </p>
+    <button class="check-button" onclick="checkGapFill('part3', ['reduce','fewer','forward','right','higher'])">Check Gap-Fill</button>
+  </section>
+
+  <!-- Worksheet Section: Part 4 -->
+  <section class="worksheetSection" id="part4">
+    <h2>Part 4: Changing Temperature (Exothermic Reaction)</h2>
+    <h3>Instructions:</h3>
+    <ol>
+      <li>Set the reaction type to <strong>Exothermic</strong> and the temperature to <strong>Low (300 K)</strong>. Run the simulation until equilibrium is reached and record the equilibrium yield.</li>
+      <li>Change the temperature to <strong>Medium (500 K)</strong>, allow the system to reach a new equilibrium, and record the yield.</li>
+      <li>Change the temperature to <strong>High (700 K)</strong>, allow the system to reach a new equilibrium, and record the yield.</li>
+    </ol>
+    <h3>Data Table:</h3>
+    <table>
+      <tr>
+        <th>Temperature</th>
+        <th>Equilibrium Yield (Purple Product Molecules)</th>
+      </tr>
+      <tr>
+        <td>Low (300 K)</td>
+        <td><input type="text" placeholder="Enter yield"></td>
+      </tr>
+      <tr>
+        <td>Medium (500 K)</td>
+        <td><input type="text" placeholder="Enter yield"></td>
+      </tr>
+      <tr>
+        <td>High (700 K)</td>
+        <td><input type="text" placeholder="Enter yield"></td>
+      </tr>
+    </table>
+    <h3>Gap-Fill Explanation:</h3>
+    <p class="gap-fill">
+      For an exothermic reaction, increasing the temperature causes the equilibrium to shift to 
+      <select id="part4_gap1">
+        <option value="">--select--</option>
+        <option value="oppose">oppose</option>
+        <option value="reinforce">reinforce</option>
+      </select>
+      the temperature increase. The endothermic reaction is 
+      <select id="part4_gap2">
+        <option value="">--select--</option>
+        <option value="favoured">favoured</option>
+        <option value="disfavoured">disfavoured</option>
+      </select>
+      to absorb the extra heat energy. This shifts the equilibrium to the 
+      <select id="part4_gap3">
+        <option value="">--select--</option>
+        <option value="left">left</option>
+        <option value="right">right</option>
+      </select>
+      , resulting in a 
+      <select id="part4_gap4">
+        <option value="">--select--</option>
+        <option value="lower">lower</option>
+        <option value="higher">higher</option>
+      </select>
+      yield of purple product molecules at higher temperatures.
+    </p>
+    <button class="check-button" onclick="checkGapFill('part4', ['oppose','favoured','left','lower'])">Check Gap-Fill</button>
+  </section>
+
+  <!-- Worksheet Section: Part 5 -->
+  <section class="worksheetSection" id="part5">
+    <h2>Part 5: Changing Temperature (Endothermic Reaction)</h2>
+    <h3>Instructions:</h3>
+    <ol>
+      <li>Set the reaction type to <strong>Endothermic</strong> and the temperature to <strong>Low (300 K)</strong>. Run the simulation until equilibrium is reached and record the equilibrium yield.</li>
+      <li>Change the temperature to <strong>Medium (500 K)</strong>, allow the system to reach a new equilibrium, and record the yield.</li>
+      <li>Change the temperature to <strong>High (700 K)</strong>, allow the system to reach a new equilibrium, and record the yield.</li>
+    </ol>
+    <h3>Data Table:</h3>
+    <table>
+      <tr>
+        <th>Temperature</th>
+        <th>Equilibrium Yield (Purple Product Molecules)</th>
+      </tr>
+      <tr>
+        <td>Low (300 K)</td>
+        <td><input type="text" placeholder="Enter yield"></td>
+      </tr>
+      <tr>
+        <td>Medium (500 K)</td>
+        <td><input type="text" placeholder="Enter yield"></td>
+      </tr>
+      <tr>
+        <td>High (700 K)</td>
+        <td><input type="text" placeholder="Enter yield"></td>
+      </tr>
+    </table>
+    <h3>Gap-Fill Explanation:</h3>
+    <p class="gap-fill">
+      For an endothermic reaction, increasing the temperature causes the equilibrium to shift to 
+      <select id="part5_gap1">
+        <option value="">--select--</option>
+        <option value="oppose">oppose</option>
+        <option value="reinforce">reinforce</option>
+      </select>
+      the temperature increase. The endothermic reaction is 
+      <select id="part5_gap2">
+        <option value="">--select--</option>
+        <option value="favoured">favoured</option>
+        <option value="disfavoured">disfavoured</option>
+      </select>
+      because it absorbs heat. This shifts the equilibrium to the 
+      <select id="part5_gap3">
+        <option value="">--select--</option>
+        <option value="right">right</option>
+        <option value="left">left</option>
+      </select>
+      , resulting in a 
+      <select id="part5_gap4">
+        <option value="">--select--</option>
+        <option value="higher">higher</option>
+        <option value="lower">lower</option>
+      </select>
+      yield of purple product molecules at higher temperatures.
+    </p>
+    <button class="check-button" onclick="checkGapFill('part5', ['oppose','favoured','right','higher'])">Check Gap-Fill</button>
+  </section>
+
+  <!-- Worksheet Section: Part 6 -->
+  <section class="worksheetSection" id="part6">
+    <h2>Part 6: Using a Catalyst</h2>
+    <h3>Instructions:</h3>
+    <ol>
+      <li>Set the reaction type to <strong>Exothermic</strong> and the temperature to <strong>Low (300 K)</strong>.</li>
+      <li>Run the simulation without a catalyst until equilibrium is reached. Record the time taken to reach equilibrium and the equilibrium yield.</li>
+      <li>Reset the simulation with the same settings, toggle the <strong>Catalyst</strong> on, and run the simulation again until equilibrium is reached. Record the time taken and the yield.</li>
+    </ol>
+    <h3>Data Table:</h3>
+    <table>
+      <tr>
+        <th>Condition</th>
+        <th>Time to Reach Equilibrium (s)</th>
+        <th>Equilibrium Yield (Purple Product Molecules)</th>
+      </tr>
+      <tr>
+        <td>Without Catalyst</td>
+        <td><input type="text" placeholder="Enter time"></td>
+        <td><input type="text" placeholder="Enter yield"></td>
+      </tr>
+      <tr>
+        <td>With Catalyst</td>
+        <td><input type="text" placeholder="Enter time"></td>
+        <td><input type="text" placeholder="Enter yield"></td>
+      </tr>
+    </table>
+    <h3>Gap-Fill Explanation:</h3>
+    <p class="gap-fill">
+      A catalyst provides an alternative reaction pathway with a 
+      <select id="part6_gap1">
+        <option value="">--select--</option>
+        <option value="lower">lower</option>
+        <option value="higher">higher</option>
+      </select>
+      activation energy. This increases the 
+      <select id="part6_gap2">
+        <option value="">--select--</option>
+        <option value="rate">rate</option>
+        <option value="yield">yield</option>
+      </select>
+      of both the forward and reverse reactions equally. As a result, the system reaches equilibrium 
+      <select id="part6_gap3">
+        <option value="">--select--</option>
+        <option value="faster">faster</option>
+        <option value="slower">slower</option>
+      </select>
+      when a catalyst is used, but the equilibrium yield remains the 
+      <select id="part6_gap4">
+        <option value="">--select--</option>
+        <option value="same">same</option>
+        <option value="different">different</option>
+      </select>
+      .
+    </p>
+    <button class="check-button" onclick="checkGapFill('part6', ['lower','rate','faster','same'])">Check Gap-Fill</button>
+  </section>
+
+  <!-- ---------- Combined Script: Simulation & Worksheet Functions ---------- -->
+  <script>
+    /***** SIMULATION CODE *****/
+    const canvas = document.getElementById("simulationCanvas");
+    const ctx = canvas.getContext("2d");
+    const startBtn = document.getElementById("startBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const toggleFFBtn = document.getElementById("toggleFFBtn");
+    const logTableBody = document.getElementById("logTableBody");
+    const bankTableBody = document.getElementById("bankTableBody");
+    const equilibriumInfo = document.getElementById("equilibriumInfo");
+    const toggleConditionsBtn = document.getElementById("toggleConditionsBtn");
+    const conditionsContent = document.getElementById("conditionsContent");
+    const add25RedBtn = document.getElementById("add25RedBtn");
+    const removeProductBtn = document.getElementById("removeProductBtn");
+    const tempSelect = document.getElementById("tempSelect");
+    const reactionTypeRadios = document.getElementsByName("reactionType");
+    const togglePressureBtn = document.getElementById("togglePressureBtn");
+    const toggleCatalystBtn = document.getElementById("toggleCatalystBtn");
+    
+    let simulationInterval;
+    let simulationTime = 0;
+    let running = false;
+    let bankedTotal = 0;
+    let lastLoggedSimTime = 0;
+    let targetYield = Infinity;
+    let equilibriumDetected = false;
+    const numInitial = 100;
+    let atomRadius = 4;
+    let molecules = [];
+    let fastForwardFactor = 1;
+    let T = 300;
+    let vMultiplier = T / 300;
+    let reactionType = "exothermic";
+    const base_forward = 0.3;
+    const base_reverse = 0.1;
+    const T_scale = 100;
+    let pressureMode = "low";
+    let catalystEnabled = false;
+    
+    function updateTargetYield() {
+      let total = molecules.length;
+      if (reactionType === "exothermic") {
+        if (T == 300) targetYield = (pressureMode === "high") ? total * 0.9 : total * 0.8;
+        else if (T == 500) targetYield = (pressureMode === "high") ? total * 0.7 : total * 0.6;
+        else if (T == 700) targetYield = (pressureMode === "high") ? total * 0.5 : total * 0.4;
+        else targetYield = total * 0.6;
+      } else {
+        if (T == 300) targetYield = (pressureMode === "high") ? total * 0.5 : total * 0.4;
+        else if (T == 500) targetYield = (pressureMode === "high") ? total * 0.7 : total * 0.6;
+        else if (T == 700) targetYield = (pressureMode === "high") ? total * 0.9 : total * 0.8;
+        else targetYield = total * 0.6;
+      }
+    }
+    
+    function getActiveBounds() {
+      if (pressureMode === "high") {
+        let left = canvas.width * 0.125;
+        let top = canvas.height * 0.125;
+        let right = canvas.width * 0.875;
+        let bottom = canvas.height * 0.875;
+        return { left, top, right, bottom };
+      } else {
+        return { left: 0, top: 0, right: canvas.width, bottom: canvas.height };
+      }
+    }
+    
+    class Molecule {
+      constructor(x, y, vx, vy, type) {
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.type = type;
+        this.activated = false;
+      }
+      move() {
+        this.x += this.vx * vMultiplier;
+        this.y += this.vy * vMultiplier;
+        let collided = false;
+        let bounds = getActiveBounds();
+        if (this.x - atomRadius < bounds.left) {
+          this.x = bounds.left + atomRadius;
+          this.vx = Math.abs(this.vx);
+          collided = true;
+        }
+        if (this.x + atomRadius > bounds.right) {
+          this.x = bounds.right - atomRadius;
+          this.vx = -Math.abs(this.vx);
+          collided = true;
+        }
+        if (this.y - atomRadius < bounds.top) {
+          this.y = bounds.top + atomRadius;
+          this.vy = Math.abs(this.vy);
+          collided = true;
+        }
+        if (this.y + atomRadius > bounds.bottom) {
+          this.y = bounds.bottom - atomRadius;
+          this.vy = -Math.abs(this.vy);
+          collided = true;
+        }
+        if (collided && catalystEnabled) {
+          this.activated = true;
+        }
+      }
+      draw() {
+        let color;
+        if (this.type === "red") color = "red";
+        else if (this.type === "blue") color = "blue";
+        else if (this.type === "product") color = "purple";
+        let grad = ctx.createRadialGradient(
+          this.x - atomRadius/3, this.y - atomRadius/3, atomRadius/4,
+          this.x, this.y, atomRadius
+        );
+        grad.addColorStop(0, "white");
+        grad.addColorStop(1, color);
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, atomRadius, 0, 2 * Math.PI);
+        ctx.fill();
+        if (this.activated) {
+          ctx.save();
+          ctx.shadowColor = "yellow";
+          ctx.shadowBlur = 15;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, atomRadius + 2, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+    }
+    
+    function drawCatalystWalls() {
+      ctx.save();
+      ctx.strokeStyle = "yellow";
+      ctx.lineWidth = 10;
+      ctx.shadowColor = "yellow";
+      ctx.shadowBlur = 20;
+      let bounds = getActiveBounds();
+      ctx.strokeRect(bounds.left, bounds.top, bounds.right - bounds.left, bounds.bottom - bounds.top);
+      ctx.restore();
+    }
+    
+    function drawPressureBox() {
+      ctx.save();
+      ctx.strokeStyle = "cyan";
+      ctx.lineWidth = 4;
+      ctx.setLineDash([8, 4]);
+      let bounds = getActiveBounds();
+      ctx.strokeRect(bounds.left, bounds.top, bounds.right - bounds.left, bounds.bottom - bounds.top);
+      ctx.restore();
+    }
+    
+    function initSimulation() {
+      molecules = [];
+      simulationTime = 0;
+      lastLoggedSimTime = 0;
+      bankedTotal = 0;
+      equilibriumDetected = false;
+      targetYield = Infinity;
+      equilibriumInfo.innerHTML = "";
+      updateBankTable();
+      logTableBody.innerHTML = "";
+      updateTargetYield();
+      for (let i = 0; i < numInitial; i++) {
+        let x = Math.random() * (canvas.width - 2 * atomRadius) + atomRadius;
+        let y = Math.random() * (canvas.height - 2 * atomRadius) + atomRadius;
+        let vx = (Math.random() - 0.5) * 2;
+        let vy = (Math.random() - 0.5) * 2;
+        let mol = new Molecule(x, y, vx, vy, "red");
+        molecules.push(mol);
+      }
+      for (let i = 0; i < numInitial; i++) {
+        let x = Math.random() * (canvas.width - 2 * atomRadius) + atomRadius;
+        let y = Math.random() * (canvas.height - 2 * atomRadius) + atomRadius;
+        let vx = (Math.random() - 0.5) * 2;
+        let vy = (Math.random() - 0.5) * 2;
+        let mol = new Molecule(x, y, vx, vy, "blue");
+        molecules.push(mol);
+      }
+    }
+    
+    function resolveCollision(m1, m2) {
+      const dx = m1.x - m2.x;
+      const dy = m1.y - m2.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      if (distance === 0 || distance >= 2 * atomRadius) return;
+      const nx = dx / distance;
+      const ny = dy / distance;
+      const dvx = m1.vx - m2.vx;
+      const dvy = m1.vy - m2.vy;
+      const p = dvx * nx + dvy * ny;
+      if (p > 0) return;
+      m1.vx -= p * nx;
+      m1.vy -= p * ny;
+      m2.vx += p * nx;
+      m2.vy += p * ny;
+      const overlap = 2 * atomRadius - distance;
+      if (overlap > 0) {
+        m1.x += (overlap / 2) * nx;
+        m1.y += (overlap / 2) * ny;
+        m2.x -= (overlap / 2) * nx;
+        m2.y -= (overlap / 2) * ny;
+      }
+    }
+    
+    function updateSimulation() {
+      const dt = 0.016;
+      updateTargetYield();
+      for (let step = 0; step < fastForwardFactor; step++) {
+        simulationTime += dt;
+        molecules.forEach(mol => mol.move());
+        for (let i = 0; i < molecules.length; i++) {
+          for (let j = i + 1; j < molecules.length; j++) {
+            let m1 = molecules[i];
+            let m2 = molecules[j];
+            const dx = m1.x - m2.x;
+            const dy = m1.y - m2.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 2 * atomRadius) {
+              resolveCollision(m1, m2);
+              let p_forward_current, p_reverse_current;
+              if (reactionType === "exothermic") {
+                if (T == 300) {
+                  p_forward_current = base_forward * 0.7;
+                  p_reverse_current = base_forward / 4;
+                } else if (T == 500) {
+                  p_forward_current = base_forward * 0.7;
+                  p_reverse_current = base_forward / 1.5;
+                } else if (T == 700) {
+                  p_forward_current = base_forward * 0.7;
+                  p_reverse_current = base_forward / 0.667;
+                } else {
+                  p_forward_current = base_forward * 0.7;
+                  p_reverse_current = base_forward / 1.5;
+                }
+              } else {
+                p_forward_current = base_forward * Math.exp(-8 / (T / T_scale));
+                p_reverse_current = base_reverse * Math.exp(-4 / (T / T_scale));
+              }
+              if (pressureMode === "high") {
+                p_forward_current *= 1.5;
+                p_reverse_current *= 0.5;
+              }
+              if (m1.activated || m2.activated) {
+                p_forward_current = Math.min(p_forward_current * 1.1, 1);
+                p_reverse_current = Math.min(p_reverse_current * 1.1, 1);
+              }
+              if ((m1.type === "red" && m2.type === "blue") ||
+                  (m1.type === "blue" && m2.type === "red")) {
+                let currentProductCount = molecules.filter(m => m.type === "product").length;
+                if (currentProductCount < targetYield) {
+                  if (Math.random() < p_forward_current) {
+                    m1.type = "product";
+                    m2.type = "product";
+                    m1.activated = false;
+                    m2.activated = false;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      let currentProductCount = molecules.filter(m => m.type === "product").length;
+      if (!equilibriumDetected && currentProductCount >= targetYield) {
+        equilibriumDetected = true;
+        displayEquilibriumInfo();
+      }
+      if (simulationTime - lastLoggedSimTime >= 10) {
+        while (simulationTime - lastLoggedSimTime >= 10) {
+          lastLoggedSimTime += 10;
+          logData(lastLoggedSimTime);
+        }
+        if (simulationTime >= 100 && logTableBody.childElementCount > 10) {
+          logTableBody.removeChild(logTableBody.firstChild);
+        }
+      }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (pressureMode === "high") { drawPressureBox(); }
+      if (catalystEnabled) { drawCatalystWalls(); }
+      molecules.forEach(mol => mol.draw());
+    }
+    
+    // Modified displayEquilibriumInfo now appends a new equilibrium event each time.
+    function displayEquilibriumInfo() {
+      let currentProductCount = molecules.filter(m => m.type === "product").length;
+      const eventDiv = document.createElement("div");
+      eventDiv.classList.add("equilibriumEvent");
+      eventDiv.innerHTML = `<h4>Equilibrium Reached</h4>
+         <p>Time: ${Math.floor(simulationTime)} s</p>
+         <p>Yield: ${currentProductCount} product molecules</p>`;
+      equilibriumInfo.appendChild(eventDiv);
+    }
+    
+    function logData(rowTime) {
+      const redCount = molecules.filter(m => m.type === "red").length;
+      const blueCount = molecules.filter(m => m.type === "blue").length;
+      const productCount = molecules.filter(m => m.type === "product").length;
+      const row = document.createElement("tr");
+      row.innerHTML = `<td>${Math.floor(rowTime)}</td>
+                       <td>${redCount}</td>
+                       <td>${blueCount}</td>
+                       <td>${productCount}</td>`;
+      logTableBody.appendChild(row);
+      updateBankTable();
+    }
+    
+    function updateBankTable() {
+      const currentProduct = molecules.filter(m => m.type === "product").length;
+      const total = bankedTotal + currentProduct;
+      bankTableBody.innerHTML = `<tr>
+                                   <td>${currentProduct}</td>
+                                   <td>${total}</td>
+                                 </tr>`;
+    }
+    
+    function add25RedParticles() {
+      for (let i = 0; i < 25; i++) {
+        let x = Math.random() * (canvas.width - 2 * atomRadius) + atomRadius;
+        let y = Math.random() * (canvas.height - 2 * atomRadius) + atomRadius;
+        let vx = (Math.random() - 0.5) * 2;
+        let vy = (Math.random() - 0.5) * 2;
+        let mol = new Molecule(x, y, vx, vy, "red");
+        mol.activated = false;
+        molecules.push(mol);
+      }
+      equilibriumDetected = false;
+      updateTargetYield();
+      equilibriumInfo.innerHTML = "";
+    }
+    
+    function removeProduct() {
+      const removedCount = molecules.filter(m => m.type === "product").length;
+      molecules = molecules.filter(m => m.type !== "product");
+      bankedTotal += removedCount;
+      updateBankTable();
+      equilibriumDetected = false;
+      updateTargetYield();
+      equilibriumInfo.innerHTML = "";
+    }
+    
+    function startSimulation() {
+      if (running) return;
+      running = true;
+      simulationInterval = setInterval(updateSimulation, 16);
+    }
+    
+    function resetSimulation() {
+      running = false;
+      clearInterval(simulationInterval);
+      initSimulation();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      equilibriumInfo.innerHTML = "";
+    }
+    
+    toggleConditionsBtn.addEventListener("click", () => {
+      conditionsContent.style.display =
+        (conditionsContent.style.display === "none" || conditionsContent.style.display === "") ? "block" : "none";
+    });
+    
+    add25RedBtn.addEventListener("click", add25RedParticles);
+    removeProductBtn.addEventListener("click", removeProduct);
+    tempSelect.addEventListener("change", e => {
+      T = Number(e.target.value);
+      vMultiplier = T / 300;
+      updateTargetYield();
+    });
+    Array.from(reactionTypeRadios).forEach(radio => {
+      radio.addEventListener("change", e => {
+        if (e.target.checked) {
+          reactionType = e.target.value;
+          updateTargetYield();
+        }
+      });
+    });
+    
+    togglePressureBtn.addEventListener("click", () => {
+      if (pressureMode === "low") {
+        pressureMode = "high";
+        togglePressureBtn.textContent = "High Pressure";
+      } else {
+        pressureMode = "low";
+        togglePressureBtn.textContent = "Low Pressure";
+        // When switching from high to low, update target yield and remove excess product molecules.
+        updateTargetYield();
+        let currentProductCount = molecules.filter(m => m.type === "product").length;
+        let target = Math.floor(targetYield);
+        if (currentProductCount > target) {
+          let excess = currentProductCount - target;
+          for (let i = molecules.length - 1; i >= 0 && excess > 0; i--) {
+            if (molecules[i].type === "product") {
+              molecules.splice(i, 1);
+              excess--;
+            }
+          }
+          bankedTotal += (currentProductCount - target);
+          updateBankTable();
+          equilibriumDetected = false;
+          equilibriumInfo.innerHTML = "";
+        }
+      }
+      resizeCanvas();
+      updateTargetYield();
+    });
+    
+    toggleCatalystBtn.addEventListener("click", () => {
+      catalystEnabled = !catalystEnabled;
+      toggleCatalystBtn.textContent = catalystEnabled ? "Catalyst: On" : "Catalyst: Off";
+    });
+    
+    toggleFFBtn.addEventListener("click", () => {
+      if (fastForwardFactor === 1) {
+        fastForwardFactor = 5;
+        toggleFFBtn.textContent = "Fast Forward: On";
+      } else {
+        fastForwardFactor = 1;
+        toggleFFBtn.textContent = "Fast Forward: Off";
+      }
+    });
+    
+    startBtn.addEventListener("click", startSimulation);
+    resetBtn.addEventListener("click", resetSimulation);
+    
+    function resizeCanvas() {
+      const container = document.getElementById("simulationContainer");
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+    initSimulation();
+    
+    /***** WORKSHEET / SCENARIO FUNCTIONS *****/
+    function toggleScenariosPanel() {
+      const panel = document.getElementById('scenariosPanel');
+      panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'block' : 'none';
+    }
+    
+    function showScenario(partId) {
+      // Hide all worksheet sections
+      const sections = document.querySelectorAll('.worksheetSection');
+      sections.forEach(sec => sec.style.display = 'none');
+      // Display selected scenario and hide the panel
+      const selected = document.getElementById(partId);
+      if (selected) {
+        selected.style.display = 'block';
+        selected.scrollIntoView({ behavior: "smooth" });
+        document.getElementById('scenariosPanel').style.display = 'none';
+      }
+    }
+    
+    function checkGapFill(part, correctAnswers) {
+      let score = 0;
+      const total = correctAnswers.length;
+      for (let i = 0; i < total; i++) {
+        const sel = document.getElementById(`${part}_gap${i + 1}`);
+        if (sel.value.trim().toLowerCase() === correctAnswers[i]) {
+          score++;
+        }
+      }
+      alert(`You got ${score} out of ${total} correct for ${part.replace('part', 'Part ')}.`);
+    }
+  </script>
+</body>
+</html>
