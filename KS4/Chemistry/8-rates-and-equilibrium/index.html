@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rates of Reaction & Equilibrium</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('rate_equilibrium_background.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #eaeaea;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            color: #00aaff;
+        }
+        .topics {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .topic-button {
+            display: block;
+            background-color: #00aaff;
+            color: white;
+            padding: 15px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            width: 80%;
+            text-align: center;
+            transition: 0.3s;
+        }
+        .topic-button:hover {
+            background-color: #0088cc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Rates of Reaction & Equilibrium</h1>
+        <p>Select a simulation to start learning interactively.</p>
+        <div class="topics">
+            <button class="topic-button" onclick="location.href='rate_reaction_simulation.html'">Rate of Reaction Simulation</button>
+            <button class="topic-button" onclick="location.href='equilibrium_simulation.html'">Equilibrium Simulation</button>
+        </div>
+    </div>
+</body>
+</html>
