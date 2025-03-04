@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Molecular Collision Energy Simulation</title>
+  <style>
+    /* Global Reset & Futuristic Background */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; font-family: 'Roboto', sans-serif; background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #e0e0e0; }
+    
+    /* Main container uses flex */
+    .main-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    
+    header {
+      padding: 10px;
+      text-align: center;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(4px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    }
+    
+    header h1 {
+      font-size: 1.6rem;
+      color: #00ffff;
+    }
+    
+    /* Panels container for simulation & energy distribution */
+    .panels-container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      padding: 10px;
+      gap: 10px;
+    }
+    
+    .panel {
+      flex: 1;
+      border-radius: 10px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    
+    /* Fixed height for simulation & energy panels */
+    .simulation-container, .energy-container {
+      height: 300px;
+    }
+    
+    /* Energy Distribution Panel */
+    .energy-container {
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-end;
+      position: relative;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      padding: 5px;
+    }
+    
+    .energy-bar-container {
+      width: 60px;
+      height: 100%;
+      background: rgba(0,0,0,0.2);
+      border-radius: 6px;
+      position: relative;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .energy-bar {
+      width: 100%;
+      position: absolute;
+      bottom: 0;
+      border-radius: 4px;
+      transition: height 0.8s cubic-bezier(0.34,1.56,0.64,1);
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.6);
+    }
+    
+    .energy-label {
+      position: absolute;
+      bottom: -20px;
+      width: 100%;
+      text-align: center;
+      font-size: 0.75rem;
+      color: #e0e0e0;
+    }
+    
+    .activation-energy {
+      position: absolute;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(to right, rgba(255,0,150,0.8), rgba(255,0,150,1), rgba(255,0,150,0.8));
+      z-index: 2;
+      box-shadow: 0 0 6px rgba(255,0,150,0.8);
+    }
+    
+    .activation-label {
+      position: absolute;
+      left: 110%;
+      top: -0.4rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #ff0096;
+    }
+    
+    /* Neon Energy Bar Colors */
+    #kinetic-energy { background: linear-gradient(to top, #00ffff, #00e5ff); }
+    #potential-energy { background: linear-gradient(to top, #ff9933, #ff3300); }
+    #total-energy { background: linear-gradient(to top, #cc00ff, #ff00ff); }
+    
+    /* Simulation Panel */
+    .simulation-container {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.6);
+    }
+    
+    .molecule {
+      position: absolute;
+      display: flex;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.8));
+    }
+    
+    /* Closer bonded atoms */
+    .atom {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      margin: 0 0.5px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8) 4%, transparent 65%);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.8), inset 0 -3px 6px rgba(0,0,0,0.8);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .atom::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      box-shadow: inset 1px 1px 4px rgba(255,255,255,0.6);
+    }
+    
+    .bond {
+      height: 8px;
+      background: linear-gradient(to bottom, #444, #222);
+      position: absolute;
+      top: 13px;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    
+    .atom.red {
+      background-color: #e53e3e;
+      background-image: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9) 4%, transparent 65%),
+                        radial-gradient(circle at 70% 65%, rgba(255,0,0,1) 0%, rgba(180,0,0,1) 100%);
+    }
+    
+    .atom.blue {
+      background-color: #3182ce;
+      background-image: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9) 4%, transparent 65%),
+                        radial-gradient(circle at 70% 65%, rgba(0,191,255,1) 0%, rgba(0,128,255,1) 100%);
+    }
+    
+    /* Compact Controls Row */
+    .controls-row {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 8px 10px;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(4px);
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.8);
+    }
+    
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: nowrap;
+    }
+    
+    .control-group label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #e0e0e0;
+    }
+    
+    .slider {
+      width: 100px;
+      height: 6px;
+      border-radius: 6px;
+      background: linear-gradient(to right, #444, #222);
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+    }
+    
+    .slider::-webkit-slider-thumb, .slider::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: linear-gradient(to bottom, #00ffff, #00e5ff);
+      border: 2px solid #fff;
+      cursor: pointer;
+    }
+    
+    button {
+      background: linear-gradient(to bottom, #00e5ff, #00b8d4);
+      color: #0a0a0a;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.8);
+      border: 1px solid rgba(0,229,255,0.6);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    button:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,229,255,0.8); }
+    button:active { transform: translateY(1px); box-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+    
+    /* Explanation Overlay (Start Screen) */
+    #explanation-screen {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(10,10,10,0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      flex-direction: column;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    #explanation-screen h2 {
+      margin-bottom: 10px;
+      color: #00e5ff;
+      font-size: 1.8rem;
+    }
+    
+    #explanation-screen p, #explanation-screen ul {
+      font-size: 1.1rem;
+      color: #e0e0e0;
+      margin-bottom: 10px;
+      text-align: left;
+      max-width: 600px;
+    }
+    
+    #explanation-screen ul { list-style: disc inside; }
+    
+    #explanation-screen button {
+      margin-top: 10px;
+      padding: 8px 12px;
+      font-size: 1rem;
+      background: #00e5ff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #0a0a0a;
+      box-shadow: 0 2px 6px rgba(0,229,255,0.8);
+    }
+  </style>
+</head>
+<body>
+  <!-- Explanation Overlay (Start Screen) -->
+  <div id="explanation-screen">
+    <h2>How Activation Energy Works</h2>
+    <p>This simulation demonstrates how activation energy affects chemical reactions between molecules:</p>
+    <ul>
+      <li><strong>Temperature</strong>: Higher temperature means higher kinetic energy.</li>
+      <li><strong>Collision</strong>: Kinetic energy is converted to potential energy at the collision.</li>
+      <li><strong>Catalyst</strong>: Lowers the effective activation energy.</li>
+      <li><strong>Bond Strength</strong>: Determines the raw activation energy needed.</li>
+      <li><strong>Reaction Outcome</strong>: Reaction occurs if potential energy meets/exceeds activation energy; otherwise, molecules separate.</li>
+      <li><strong>Energy Conservation</strong>: Total energy remains constant.</li>
+    </ul>
+    <button id="close-explanation">Start Simulation</button>
+  </div>
+  
+  <div class="main-container">
+    <header>
+      <h1>Molecular Collision Energy Simulation</h1>
+    </header>
+    
+    <!-- Panels: Energy Distribution & Simulation -->
+    <div class="panels-container">
+      <div class="panel" style="max-width: 40%;">
+        <div class="energy-container">
+          <div class="energy-bar-container">
+            <div class="energy-label">KE</div>
+            <div id="kinetic-energy" class="energy-bar" style="height: 100px;"></div>
+          </div>
+          <div class="energy-bar-container">
+            <div class="energy-label">PE</div>
+            <div id="potential-energy" class="energy-bar" style="height: 30px;"></div>
+            <div id="activation-energy" class="activation-energy">
+              <span class="activation-label">Ea</span>
+            </div>
+          </div>
+          <div class="energy-bar-container">
+            <div class="energy-label">Total</div>
+            <div id="total-energy" class="energy-bar" style="height: 130px;"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="panel" style="max-width: 60%;">
+        <div class="simulation-container" id="simulation">
+          <div class="reaction-result success" id="success-message">Reaction Successful!</div>
+          <div class="reaction-result failure" id="failure-message">Insufficient Energy!</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Compact Controls Row -->
+    <div class="controls-row">
+      <div class="control-group">
+        <label for="temperature">Temp:</label>
+        <input type="range" id="temperature" class="slider" min="1" max="100" value="50">
+        <span id="temp-display">50°C</span>
+      </div>
+      <div class="control-group">
+        <label for="bond-strength">Bond:</label>
+        <input type="range" id="bond-strength" class="slider" min="50" max="250" value="150">
+        <span id="bond-display">Med</span>
+      </div>
+      <button id="start-button">
+        <svg width="16" height="16" viewBox="0 0 16 16"><path fill="currentColor" d="M4 3v10l8-5-8-5z"></path></svg>
+        Start
+      </button>
+      <button id="reset-button" class="reset-button">
+        <svg width="16" height="16" viewBox="0 0 16 16"><path fill="currentColor" d="M8 3a5 5 0 0 0-5 5H1l3.5 3.5L8 8H6a2 2 0 1 1 2 2v2a4 4 0 1 0-4-4H2a6 6 0 1 1 6 6v-2a4 4 0 0 0 0-8z"></path></svg>
+        Reset
+      </button>
+      <button id="catalyst-button" class="catalyst-button">Add Catalyst</button>
+      <button id="toggle-explanation">Toggle Explanation</button>
+    </div>
+  </div>
+  
+  <script>
+    // --- Simulation Constants & Settings ---
+    const BASE_POTENTIAL = 30;
+    const KE_MULTIPLIER = 2;
+    const REACTION_DELAY = 500;
+    const MOLECULE_WIDTH = 75;
+    const collisionThreshold = 5;
+    const energyScale = 1;
+    
+    // --- DOM Elements ---
+    const kineticEnergyBar = document.getElementById('kinetic-energy');
+    const potentialEnergyBar = document.getElementById('potential-energy');
+    const totalEnergyBar = document.getElementById('total-energy');
+    const activationEnergyMarker = document.getElementById('activation-energy');
+    const simulationContainer = document.getElementById('simulation');
+    const temperatureSlider = document.getElementById('temperature');
+    const temperatureDisplay = document.getElementById('temp-display');
+    const bondStrengthSlider = document.getElementById('bond-strength');
+    const bondStrengthDisplay = document.getElementById('bond-display');
+    const startButton = document.getElementById('start-button');
+    const resetButton = document.getElementById('reset-button');
+    const catalystButton = document.getElementById('catalyst-button');
+    const toggleExplanationButton = document.getElementById('toggle-explanation');
+    const successMessage = document.getElementById('success-message');
+    const failureMessage = document.getElementById('failure-message');
+    const explanationScreen = document.getElementById('explanation-screen');
+    const closeExplanation = document.getElementById('close-explanation');
+    
+    // --- Energy & Bond Variables ---
+    let kineticEnergy = 100;
+    let potentialEnergy = BASE_POTENTIAL;
+    let totalEnergy = kineticEnergy + potentialEnergy;
+    let rawBondStrength = 150;
+    let effectiveActivationEnergy = rawBondStrength;
+    let catalystActive = false;
+    
+    // --- Animation State ---
+    let simulationRunning = false;
+    let molecule1, molecule2;
+    let animationId;
+    let molecule1Pos = 10;
+    let molecule2Pos = 0;
+    let collisionPotential = 0;
+    
+    function updateEnergyBars() {
+      kineticEnergyBar.style.height = `${kineticEnergy * energyScale}px`;
+      potentialEnergyBar.style.height = `${potentialEnergy * energyScale}px`;
+      totalEnergy = kineticEnergy + potentialEnergy;
+      totalEnergyBar.style.height = `${totalEnergy * energyScale}px`;
+    }
+    
+    function updateCatalystButton() {
+      if (catalystActive) {
+        catalystButton.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" style="margin-right:4px;"><path fill="currentColor" d="M13,11.33L18,16.33V16.5C18,19 16,21 13.5,21C11,21 9,19 9,16.5V16.33L13,12.33V11.33Z"/><path fill="currentColor" d="M11,2V6H13V2H11Z"/></svg>Remove Catalyst`;
+      } else {
+        catalystButton.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" style="margin-right:4px;"><path fill="currentColor" d="M13,11.33L18,16.33V16.5C18,19 16,21 13.5,21C11,21 9,19 9,16.5V16.33L13,12.33V11.33Z"/><path fill="currentColor" d="M11,2V6H13V2H11Z"/></svg>Add Catalyst`;
+      }
+    }
+    
+    function updateEffectiveActivationEnergy() {
+      effectiveActivationEnergy = catalystActive ? Math.round(rawBondStrength * 2 / 3) : rawBondStrength;
+      activationEnergyMarker.style.bottom = `${effectiveActivationEnergy * energyScale}px`;
+    }
+    
+    function createMolecules() {
+      // Ensure no reaction message appears initially
+      successMessage.style.opacity = 0;
+      failureMessage.style.opacity = 0;
+      
+      simulationContainer.innerHTML = '';
+      simulationContainer.appendChild(successMessage);
+      simulationContainer.appendChild(failureMessage);
+      
+      molecule1 = document.createElement('div');
+      molecule1.className = 'molecule';
+      molecule1.style.left = '10px';
+      molecule1.style.top = '135px';
+      const redAtom1 = document.createElement('div');
+      redAtom1.className = 'atom red';
+      const redBond = document.createElement('div');
+      redBond.className = 'bond';
+      const redAtom2 = document.createElement('div');
+      redAtom2.className = 'atom red';
+      molecule1.appendChild(redAtom1);
+      molecule1.appendChild(redBond);
+      molecule1.appendChild(redAtom2);
+      simulationContainer.appendChild(molecule1);
+      
+      molecule2 = document.createElement('div');
+      molecule2.className = 'molecule';
+      let containerWidth = simulationContainer.clientWidth || 800;
+      molecule2Pos = containerWidth - MOLECULE_WIDTH - 10;
+      molecule2.style.left = `${molecule2Pos}px`;
+      molecule2.style.top = '135px';
+      const blueAtom1 = document.createElement('div');
+      blueAtom1.className = 'atom blue';
+      const blueBond = document.createElement('div');
+      blueBond.className = 'bond';
+      const blueAtom2 = document.createElement('div');
+      blueAtom2.className = 'atom blue';
+      molecule2.appendChild(blueAtom1);
+      molecule2.appendChild(blueBond);
+      molecule2.appendChild(blueAtom2);
+      simulationContainer.appendChild(molecule2);
+    }
+    
+    function handleTemperatureChange() {
+      const temp = parseInt(temperatureSlider.value);
+      temperatureDisplay.textContent = `${temp}°C`;
+      kineticEnergy = temp * KE_MULTIPLIER;
+      potentialEnergy = BASE_POTENTIAL;
+      updateEnergyBars();
+    }
+    
+    function handleBondStrengthChange() {
+      rawBondStrength = parseInt(bondStrengthSlider.value);
+      if (rawBondStrength < 100) {
+        bondStrengthDisplay.textContent = "Weak";
+        bondStrengthDisplay.style.color = "#38a169";
+      } else if (rawBondStrength < 200) {
+        bondStrengthDisplay.textContent = "Med";
+        bondStrengthDisplay.style.color = "#3182ce";
+      } else {
+        bondStrengthDisplay.textContent = "Strong";
+        bondStrengthDisplay.style.color = "#e53e3e";
+      }
+      updateEffectiveActivationEnergy();
+    }
+    
+    function startSimulation() {
+      if (simulationRunning) return;
+      simulationRunning = true;
+      startButton.disabled = true;
+      temperatureSlider.disabled = true;
+      bondStrengthSlider.disabled = true;
+      catalystButton.disabled = true;
+      
+      successMessage.style.opacity = 0;
+      failureMessage.style.opacity = 0;
+      
+      let containerWidth = simulationContainer.clientWidth;
+      molecule1Pos = 10;
+      molecule2Pos = containerWidth - MOLECULE_WIDTH - 10;
+      molecule1.style.left = `${molecule1Pos}px`;
+      molecule2.style.left = `${molecule2Pos}px`;
+      
+      const initialKinetic = kineticEnergy;
+      let simulationPhase = "approach"; // "approach", "waiting", "separation", "reaction"
+      let collisionTimestamp = null;
+      collisionPotential = 0;
+      
+      function animate(timestamp) {
+        const speed = parseFloat(temperatureSlider.value) / 10;
+        
+        if (simulationPhase === "approach") {
+          molecule1Pos += speed;
+          molecule2Pos -= speed;
+          const totalApproach = (containerWidth - 20 - MOLECULE_WIDTH) / 2;
+          const distanceTravelled = molecule1Pos - 10;
+          const progress = Math.min(distanceTravelled / totalApproach, 1);
+          const ease = progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+          const transferred = initialKinetic * ease;
+          kineticEnergy = initialKinetic - transferred;
+          potentialEnergy = BASE_POTENTIAL + transferred;
+          updateEnergyBars();
+          
+          const gap = molecule2Pos - (molecule1Pos + MOLECULE_WIDTH);
+          if (gap <= collisionThreshold) {
+            simulationPhase = "waiting";
+            collisionTimestamp = timestamp;
+            collisionPotential = potentialEnergy;
+          }
+        } else if (simulationPhase === "waiting") {
+          if (timestamp - collisionTimestamp >= REACTION_DELAY) {
+            simulationPhase = potentialEnergy >= effectiveActivationEnergy ? "reaction" : "separation";
+          }
+        } else if (simulationPhase === "separation") {
+          molecule1Pos -= speed;
+          molecule2Pos += speed;
+          let currentGap = molecule2Pos - (molecule1Pos + MOLECULE_WIDTH);
+          let maxGap = containerWidth - MOLECULE_WIDTH - 20;
+          let separationProgress = Math.min(currentGap / maxGap, 1);
+          potentialEnergy = BASE_POTENTIAL + (collisionPotential - BASE_POTENTIAL) * (1 - separationProgress);
+          kineticEnergy = totalEnergy - potentialEnergy;
+          updateEnergyBars();
+          if (molecule1Pos <= 10 && molecule2Pos >= containerWidth - MOLECULE_WIDTH - 10) {
+            simulationRunning = false;
+            startButton.disabled = false;
+            temperatureSlider.disabled = false;
+            bondStrengthSlider.disabled = false;
+            catalystButton.disabled = false;
+            failureMessage.style.opacity = 1;
+            return;
+          }
+        } else if (simulationPhase === "reaction") {
+          transformMolecules();
+          simulationRunning = false;
+          startButton.disabled = false;
+          temperatureSlider.disabled = false;
+          bondStrengthSlider.disabled = false;
+          catalystButton.disabled = false;
+          return;
+        }
+        
+        molecule1.style.left = `${molecule1Pos}px`;
+        molecule2.style.left = `${molecule2Pos}px`;
+        animationId = requestAnimationFrame(animate);
+      }
+      
+      animationId = requestAnimationFrame(animate);
+    }
+    
+    function transformMolecules() {
+      simulationContainer.innerHTML = '';
+      simulationContainer.appendChild(successMessage);
+      simulationContainer.appendChild(failureMessage);
+      
+      const newMolecule1 = document.createElement('div');
+      newMolecule1.className = 'molecule';
+      newMolecule1.style.left = '80px';
+      newMolecule1.style.top = '135px';
+      const newRedAtom = document.createElement('div');
+      newRedAtom.className = 'atom red';
+      const newBond = document.createElement('div');
+      newBond.className = 'bond';
+      const newBlueAtom = document.createElement('div');
+      newBlueAtom.className = 'atom blue';
+      newMolecule1.appendChild(newRedAtom);
+      newMolecule1.appendChild(newBond);
+      newMolecule1.appendChild(newBlueAtom);
+      simulationContainer.appendChild(newMolecule1);
+      
+      const newMolecule2 = document.createElement('div');
+      newMolecule2.className = 'molecule';
+      newMolecule2.style.left = 'calc(100% - 160px)';
+      newMolecule2.style.top = '135px';
+      const newBlueAtom2 = document.createElement('div');
+      newBlueAtom2.className = 'atom blue';
+      const newBond2 = document.createElement('div');
+      newBond2.className = 'bond';
+      const newRedAtom2 = document.createElement('div');
+      newRedAtom2.className = 'atom red';
+      newMolecule2.appendChild(newBlueAtom2);
+      newMolecule2.appendChild(newBond2);
+      newMolecule2.appendChild(newRedAtom2);
+      simulationContainer.appendChild(newMolecule2);
+      
+      const finalPotential = totalEnergy * 0.4;
+      const finalKinetic = totalEnergy - finalPotential;
+      let currentPotential = potentialEnergy;
+      let currentKinetic = kineticEnergy;
+      
+      function updateFinalEnergies() {
+        if (Math.abs(currentPotential - finalPotential) < 1) {
+          potentialEnergy = finalPotential;
+          kineticEnergy = finalKinetic;
+          updateEnergyBars();
+          return;
+        }
+        const step = (finalPotential - currentPotential) * 0.1;
+        currentPotential += step;
+        currentKinetic = totalEnergy - currentPotential;
+        potentialEnergy = currentPotential;
+        kineticEnergy = currentKinetic;
+        updateEnergyBars();
+        requestAnimationFrame(updateFinalEnergies);
+      }
+      updateFinalEnergies();
+      
+      successMessage.style.opacity = 1;
+    }
+    
+    function resetSimulation() {
+      if (simulationRunning) {
+        cancelAnimationFrame(animationId);
+        simulationRunning = false;
+      }
+      startButton.disabled = false;
+      temperatureSlider.disabled = false;
+      bondStrengthSlider.disabled = false;
+      catalystButton.disabled = false;
+      successMessage.style.opacity = 0;
+      failureMessage.style.opacity = 0;
+      potentialEnergy = BASE_POTENTIAL;
+      handleTemperatureChange();
+      createMolecules();
+    }
+    
+    function toggleCatalyst() {
+      catalystActive = !catalystActive;
+      updateCatalystButton();
+      updateEffectiveActivationEnergy();
+    }
+    
+    function toggleExplanation() {
+      if (explanationScreen.style.display === "none") {
+        explanationScreen.style.display = "flex";
+      } else {
+        explanationScreen.style.display = "none";
+      }
+    }
+    
+    function initSimulation() {
+      createMolecules();
+      temperatureSlider.addEventListener('input', handleTemperatureChange);
+      bondStrengthSlider.addEventListener('input', handleBondStrengthChange);
+      startButton.addEventListener('click', startSimulation);
+      resetButton.addEventListener('click', resetSimulation);
+      catalystButton.addEventListener('click', toggleCatalyst);
+      toggleExplanationButton.addEventListener('click', toggleExplanation);
+      closeExplanation.addEventListener('click', () => { explanationScreen.style.display = "none"; });
+      handleTemperatureChange();
+      handleBondStrengthChange();
+      updateCatalystButton();
+    }
+    
+    document.addEventListener('DOMContentLoaded', initSimulation);
+  </script>
+</body>
+</html>
